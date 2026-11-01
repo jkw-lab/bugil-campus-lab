@@ -13,7 +13,7 @@ function naturalElevation(x,z){
 // Artistic flat pads and sports areas. Each plateau has a smooth graded shoulder.
 const pads=[
   {id:'field',x:-5,z:5,w:156,d:128,edge:23},
-  {id:'baseball',x:-214,z:106,w:145,d:145,edge:24},
+  {id:'baseball',x:-221,z:110,w:158,d:162,edge:18},
   {id:'girlsField',x:179,z:17,w:102,d:80,edge:20},
   {id:'parking',x:119,z:150,w:76,d:49,edge:18},
   {id:'northPlaza',x:-8,z:-92,w:105,d:40,edge:13},
