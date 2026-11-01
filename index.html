@@ -1,142 +1,41 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#101827" />
-<title>BUGIL CAMPUS LAB — 3D 샌드박스</title>
-<style>
-  :root{color-scheme:dark;--bg:#0c1421;--panel:#121c2bdf;--line:#2b384d;--white:#f1f6ff;--muted:#9fb0c9;--accent:#ffae62}
-  *{box-sizing:border-box}html,body{padding:0;margin:0;height:100%;overflow:hidden;background:#101927;color:var(--white);font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
-  #app{position:absolute;inset:0}canvas{display:block;touch-action:none}
-  header{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:22px 26px;pointer-events:none;background:linear-gradient(#07101acc,transparent)}
-  .eyebrow{font-size:10px;letter-spacing:.24em;color:var(--accent);font-weight:800}.brand{font-size:20px;font-weight:800;letter-spacing:-.05em;margin-top:3px}.sub{font-size:11px;opacity:.8;margin-top:5px;color:#c6d3e8}
-  .tag{font-size:11px;letter-spacing:.05em;background:#16253bbd;border:1px solid #5b708341;border-radius:40px;padding:9px 12px;color:#d8e4f4}
-  aside{position:absolute;top:112px;left:20px;width:240px;max-height:calc(100dvh - 200px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;backdrop-filter:blur(18px);box-shadow:0 10px 40px #0003}
-  h2{font-size:12px;letter-spacing:.05em;margin:0 0 13px;color:#dae4f3}#buildings{display:flex;flex-direction:column;gap:7px}
-  .building{display:flex;align-items:center;justify-content:space-between;gap:6px;background:#ffffff09;border:1px solid #ffffff12;border-radius:9px;padding:8px 9px}
-  .building b{font-size:11px;font-weight:650}.building small{display:block;font-size:10px;color:var(--muted);margin-top:3px}
-  .building button{border:1px solid #3e5470;border-radius:7px;background:#23364d;color:#cce5ff;padding:6px 8px;cursor:pointer;font-size:10px;white-space:nowrap}
-  .building button:disabled{opacity:.35;cursor:default}.info{font-size:11px;line-height:1.6;color:#a9b8ce;margin-top:14px}
-  .hud{position:absolute;right:20px;bottom:26px;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none}
-  .meter,.controls{pointer-events:auto;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(18px);border-radius:14px;padding:12px 16px}
-  .meter{width:230px}.meter-head{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#bdcbe0}.num{font-size:26px;font-weight:800;color:var(--white)}.bar{height:6px;border-radius:8px;background:#344258;margin-top:9px;overflow:hidden}.bar>div{height:100%;width:0%;background:linear-gradient(90deg,#ffae62,#ffd59c);transition:width .2s}
-  .controls{display:flex;gap:8px}.controls button{cursor:pointer;border:1px solid #52657d;background:#20314a;color:#f1f7ff;border-radius:9px;padding:10px 12px;font-size:12px;font-weight:650}.controls button.primary{background:#ffaf66;border-color:#ffaf66;color:#2d1b0b}
-  .toast{position:absolute;left:50%;top:16%;transform:translate(-50%,-12px);background:#0c172ae8;border:1px solid #6683a4;color:white;border-radius:12px;padding:12px 18px;pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;text-align:center;font-weight:750;font-size:14px}.toast.visible{opacity:1;transform:translate(-50%,0)}
-  .tip{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);font-size:11px;color:#edf6ffac;pointer-events:none;white-space:nowrap;text-shadow:0 1px 5px black}
-  .loading{position:absolute;inset:0;display:grid;place-items:center;background:#0d1725;color:#dbe6f7;z-index:5;text-align:center;padding:20px}.loading strong{display:block;font-size:20px;margin-bottom:12px}
-  @media(max-width:700px){header{padding:15px 16px}.brand{font-size:17px}.sub{font-size:10px}.tag{font-size:9px;padding:6px 8px}aside{top:auto;bottom:100px;left:10px;width:170px;max-height:36vh;padding:10px;border-radius:12px}h2{font-size:11px;margin-bottom:8px}.building{padding:6px 7px}.building b{font-size:10px}.building small{font-size:9px}.building button{padding:4px;font-size:9px}.info{font-size:9px;margin-top:7px}.hud{bottom:18px;right:10px}.meter{width:155px;padding:9px 10px}.num{font-size:19px}.controls{padding:7px;gap:6px}.controls button{font-size:10px;padding:9px 8px}.tip{display:none}}
-</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101820">
+<meta name="description" content="BUGIL CAMPUS LAB: 공개 사진 자료로 재구성한 북일고 3D 캠퍼스 시제품.">
+<title>BUGIL CAMPUS LAB · v0.2</title>
+<link rel="stylesheet" href="./styles.css">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head>
 <body>
-<div id="app"></div>
-<header><div><div class="eyebrow">BUGIL · INDEPENDENT CONCEPT</div><div class="brand">북일고 CAMPUS LAB</div><div class="sub">교육용 3D 샌드박스 · 공개 자료 기반 개략 배치</div></div><span class="tag">PROTOTYPE v0.1</span></header>
-<aside><h2>건물 탐색</h2><div id="buildings"></div><div class="info">건물을 터치하면 블록이 흩어집니다.<br>드래그: 회전 · 휠/두 손가락: 확대</div></aside>
-<div class="hud"><div class="meter"><div class="meter-head"><span>블록 해체 진행률</span><span><span class="num" id="count">0</span> / 6</span></div><div class="bar"><div id="progress"></div></div></div><div class="controls"><button id="home">시점 복구</button><button id="reset" class="primary">모든 건물 복구</button></div></div>
-<div class="tip">건물을 클릭해 보고, 다른 각도에서 캠퍼스를 둘러보세요</div>
-<div class="toast" id="toast"></div>
-<div class="loading" id="loading"><div><strong>북일고 3D 캠퍼스</strong>장면을 불러오는 중입니다…<p style="font-size:12px;color:#90a4c4">첫 실행에는 인터넷 연결이 필요합니다.</p></div></div>
+<div id="world"></div>
+<div class="topbar">
+  <div class="brand"><div class="kicker">BUGIL · CAMPUS LAB</div><h1>북일고 3D 캠퍼스</h1><small>PHOTO-REFERENCED CONCEPT · v0.2</small></div>
+  <div class="topright" id="views"><button data-view="campus" class="active">전체</button><button data-view="main">본관</button><button data-view="field">운동장</button><button data-view="dorm">기숙사</button></div>
+</div>
+<div class="panel">
+  <div class="panelhead"><div class="mini">CAMPUS INDEX</div><h2>건물과 시설</h2><p>공식 캠퍼스 안내도와 위성사진을 기준으로 배치한 개략 모델입니다.</p></div>
+  <div class="facilitylist" id="facilities"></div>
+  <div class="detail" id="detail">건물 이름을 누르면 해당 장소로 이동합니다.</div>
+</div>
+<div class="status"><div>모델링 진행 상태</div><b id="status-title">주요 건물 7동 · 지형</b><div id="status-sub">위치·비율은 사진 기반 추정치</div></div>
+<div class="notice" id="notice"></div>
+<div class="footnote">실측 3D 모델이 아닌 독립 제작 시제품 · 원본 사진과 지도 자료는 3D 장면에 포함하지 않음</div>
+<div class="bottombar">
+  <button class="tool active" id="inspect" aria-pressed="true"><span>⌖</span><b>건물 탐색</b></button>
+  <button class="tool" id="detail-view"><span>▦</span><b>창문 보기</b></button>
+  <button class="tool" id="labels"><span>▤</span><b>이름 표시</b></button>
+  <button class="tool" id="compare"><span>◈</span><b>위에서 보기</b></button>
+  <button class="tool" id="collapse"><span>▧</span><b>블록 분리</b></button>
+  <button class="tool" id="restore"><span>↺</span><b>복구</b></button>
+</div>
+<div class="loading" id="loading"><div><b>BUGIL CAMPUS LAB</b><p>3D 캠퍼스를 구성하고 있습니다…</p></div></div>
 <script>
-// Show an actionable error instead of an indefinite spinner if a CDN cannot load.
-window.addEventListener('error',()=>{
-  const el=document.getElementById('loading');
-  if(el)el.innerHTML='<div><strong>3D 화면을 불러오지 못했습니다.</strong>인터넷 연결을 확인한 뒤 새로고침하거나<br>GitHub Pages에서 실행해 주세요.</div>';
-},true);
-setTimeout(()=>{
-  const el=document.getElementById('loading');
-  if(el)el.innerHTML='<div><strong>외부 3D 라이브러리 연결 확인 필요</strong>네트워크 상태를 확인한 뒤 새로고침해 주세요.</div>';
-},18000);
+window.addEventListener("error",function(e){const el=document.getElementById("loading");if(el){el.innerHTML="<div><b>3D 화면을 불러오지 못했습니다.</b><p>네트워크 연결과 Safari의 WebGL 지원 여부를 확인해 주세요.</p></div>";}},true);
+setTimeout(function(){const el=document.getElementById("loading");if(el)el.innerHTML="<div><b>3D 라이브러리 연결 지연</b><p>페이지를 새로고침해 주세요.</p></div>"},20000);
 </script>
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-const container=document.querySelector('#app');
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x9dbace);scene.fog=new THREE.Fog(0x9dbace,320,680);
-const camera=new THREE.PerspectiveCamera(47,innerWidth/innerHeight,0.1,950);
-const initialCamera=new THREE.Vector3(175,135,185),initialTarget=new THREE.Vector3(15,0,-5);
-camera.position.copy(initialCamera);
-const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;container.appendChild(renderer.domElement);
-const controls=new OrbitControls(camera,renderer.domElement);controls.target.copy(initialTarget);controls.enableDamping=true;controls.dampingFactor=.075;controls.maxPolarAngle=Math.PI/2.06;controls.minDistance=40;controls.maxDistance=480;controls.enablePan=true;controls.update();
-scene.add(new THREE.HemisphereLight(0xe9f5ff,0x566c58,2.3));const sun=new THREE.DirectionalLight(0xfff0d9,2.4);sun.position.set(-100,155,80);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-210;sun.shadow.camera.right=210;sun.shadow.camera.top=210;sun.shadow.camera.bottom=-210;sun.shadow.normalBias=.027;scene.add(sun);
-const mat=(hex,roughness=1)=>new THREE.MeshStandardMaterial({color:hex,roughness});
-const green=mat(0x739b70),turf=mat(0x628c5f),path=mat(0xb7b5a9),street=mat(0x777c83),line=mat(0xf4f1db),roofGreen=mat(0x72968b),brick=mat(0xaa6958),light=mat(0xe6e0d1),glass=mat(0x577e92,.35),dark=mat(0x3f5564),court=mat(0xc18b73),sand=mat(0xc3a977);
-const box=(w,h,d,m,x,y,z,parent=scene,cast=false)=>{const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);mesh.position.set(x,y,z);mesh.castShadow=cast;mesh.receiveShadow=true;parent.add(mesh);return mesh};
-const ground=box(460,.5,400,green,0,-.5,0);ground.receiveShadow=true;
-// Deliberately approximate layout: this is a concept model, not a surveyed site plan.
-box(205,.1,12,street,15,.01,81);box(13,.1,155,street,117,.02,0);box(9,.12,96,path,24,.05,-1);box(73,.12,13,path,-20,.06,51);
-box(81,.18,59,sand,-40,.04,20);box(71,.2,45,turf,-40,.11,20);
-for(let x=-72;x<=-8;x+=9){box(6,.03,.42,line,x,.25,-1);box(6,.03,.42,line,x,.25,41)}
-for(let z=2;z<41;z+=8){box(.42,.04,6,line,-75,.26,z);box(.42,.04,6,line,-5,.26,z)}
-// baseball ground (abstracted as decorative geometric surfaces)
-const baseball=new THREE.Mesh(new THREE.CircleGeometry(35,64),turf);baseball.rotation.x=-Math.PI/2;baseball.position.set(75,.18,-76);scene.add(baseball);
-const diamond=new THREE.Mesh(new THREE.PlaneGeometry(31,31),sand);diamond.rotation.x=-Math.PI/2;diamond.rotation.z=Math.PI/4;diamond.position.set(75,.19,-76);scene.add(diamond);
-const inner=new THREE.Mesh(new THREE.CircleGeometry(19,48),turf);inner.rotation.x=-Math.PI/2;inner.position.set(75,.21,-76);scene.add(inner);
-// Trees: simple 3D primitives, original geometry.
-const treeCrown=[mat(0x4c7658),mat(0x588061),mat(0x698f6b),mat(0x477a61)],trunk=mat(0x6f5946);
-function tree(x,z,s=1){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);box(1.1*s,5*s,1.1*s,trunk,0,2.5*s,0,g,true);const crown=new THREE.Mesh(new THREE.IcosahedronGeometry(4*s,1),treeCrown[Math.floor(Math.abs(x+z)*3)%treeCrown.length]);crown.position.y=8*s;crown.castShadow=true;g.add(crown)}
-for(let i=0;i<28;i++){const x=-110+i*8.5;tree(x,-90+(i%3)*2,.8+(i%4)*.1)}
-for(let i=0;i<17;i++){tree(-95+i*11,111+(i%3)*2,.72+(i%4)*.1)}
-for(let i=0;i<13;i++){tree(-107,-43+i*10,.72)}
-for(let i=0;i<16;i++){const a=i*2.399;tree(13+Math.cos(a)*(17+(i%3)*4),-82+Math.sin(a)*(10+(i%4)*3),.55)}
-function roof(x,y,z,w,d,material=roofGreen,parent=scene){return box(w,.9,d,material,x,y,z,parent,true)}
-function windows(group,w,h,d,levels,segments,material){
-  for(let level=0;level<levels;level++){
-    let yy=3.2+(level+.2)*(h-4)/(levels);
-    for(let s=0;s<segments;s++){
-      const xx=-w/2+(s+.5)*w/segments;
-      const win=box(Math.min(w/segments*.66,3.4),1.55,.09,material,xx,yy,d/2+.065,group);
-      const back=box(Math.min(w/segments*.66,3.4),1.55,.09,material,xx,yy,-d/2-.065,group);
-      win.userData.decor=true;back.userData.decor=true;
-    }
-  }
-}
-const buildings=[
-  {id:'main',name:'본관',detail:'교사동',x:-50,z:-42,w:78,d:17,h:21,wall:light,roof:roofGreen,level:4,windows:19},
-  {id:'adan',name:'아단관',detail:'종합관',x:2,z:-36,w:26,d:22,h:17,wall:mat(0xd9cec0),roof:dark,level:3,windows:8},
-  {id:'creative',name:'창의관',detail:'교사동',x:43,z:-43,w:45,d:17,h:21,wall:mat(0xd0d9d0),roof:roofGreen,level:4,windows:12},
-  {id:'gym',name:'현암관',detail:'체육관',x:10,z:43,w:40,d:23,h:15,wall:mat(0xdcd8ca),roof:roofGreen,level:2,windows:9},
-  {id:'dorm1',name:'여송학사 본관',detail:'기숙사',x:75,z:0,w:28,d:17,h:24,wall:brick,roof:mat(0x796760),level:5,windows:8},
-  {id:'dorm2',name:'여송학사 신관',detail:'기숙사',x:85,z:38,w:29,d:18,h:29,wall:brick,roof:mat(0x796760),level:6,windows:8}
-];
-const meshOwner=new Map(),debris=[];
-function makeBuilding(b){
-  const group=new THREE.Group();group.position.set(b.x,0,b.z);scene.add(group);
-  box(b.w,b.h,b.d,b.wall,0,b.h/2,0,group,true);
-  roof(0,b.h+.55,0,b.w+.6,b.d+.8,b.roof,group);
-  windows(group,b.w,b.h,b.d,b.level,b.windows,glass);
-  box(Math.min(b.w*.18,6),3.4,.18,dark,0,1.9,b.d/2+.11,group);
-  group.traverse(o=>{if(o.isMesh)meshOwner.set(o,b.id)});
-  b.group=group;b.destroyed=false;
-}
-buildings.forEach(makeBuilding);
-// 3D label sprites using self-generated canvas, independent of any original game art.
-function makeLabel(text,x,y,z){const cvs=document.createElement('canvas');cvs.width=256;cvs.height=65;const c=cvs.getContext('2d');c.fillStyle='#101a28e6';c.beginPath();c.roundRect(6,5,244,54,12);c.fill();c.strokeStyle='#e3edf977';c.lineWidth=2;c.stroke();c.textAlign='center';c.textBaseline='middle';c.font='bold 26px sans-serif';c.fillStyle='#f7faff';c.fillText(text,128,33);const tex=new THREE.CanvasTexture(cvs);const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,depthTest:false,transparent:true}));sprite.scale.set(26,6.6,1);sprite.position.set(x,y,z);scene.add(sprite);return sprite}
-for(const b of buildings){b.label=makeLabel(b.name,b.x,b.h+8,b.z)}
-makeLabel('대운동장',-40,5,22);makeLabel('야구장',75,5,-77);
-let destroyedCount=0,noticeTimeout=0;const count=document.getElementById('count'),progress=document.getElementById('progress'),entries=document.getElementById('buildings'),toast=document.getElementById('toast');
-function notify(msg){toast.textContent=msg;toast.classList.add('visible');clearTimeout(noticeTimeout);noticeTimeout=setTimeout(()=>toast.classList.remove('visible'),1400)}
-function updateHUD(){count.textContent=String(destroyedCount);progress.style.width=(destroyedCount/buildings.length*100)+'%';for(const b of buildings){const item=document.getElementById('item-'+b.id);const btn=item.querySelector('button');item.querySelector('small').textContent=b.destroyed?'해체됨':b.detail;btn.textContent=b.destroyed?'완료':'보기';btn.disabled=b.destroyed}}
-function focusBuilding(b){controls.target.set(b.x,b.h/2,b.z);camera.position.set(b.x+65,b.h+57,b.z+72);controls.update()}
-for(const b of buildings){const el=document.createElement('div');el.className='building';el.id='item-'+b.id;const summary=document.createElement('div');const title=document.createElement('b');title.textContent=b.name;const detail=document.createElement('small');detail.textContent=b.detail;summary.append(title,detail);const btn=document.createElement('button');btn.textContent='보기';btn.addEventListener('click',()=>focusBuilding(b));el.append(summary,btn);entries.append(el)}
-function collapse(b){if(b.destroyed)return;b.destroyed=true;b.group.visible=false;b.label.visible=false;destroyedCount++;const chunksX=Math.max(2,Math.min(9,Math.round(b.w/8))),chunksZ=Math.max(2,Math.min(5,Math.round(b.d/7))),chunksY=Math.max(2,Math.min(6,Math.round(b.h/5)));
- for(let ix=0;ix<chunksX;ix++)for(let iy=0;iy<chunksY;iy++)for(let iz=0;iz<chunksZ;iz++){
-   if(Math.random()<.16)continue;
-   const w=b.w/chunksX*.9,d=b.d/chunksZ*.9,h=b.h/chunksY*.9;
-   const px=b.x-b.w/2+(ix+.5)*b.w/chunksX,pz=b.z-b.d/2+(iz+.5)*b.d/chunksZ,py=(iy+.5)*b.h/chunksY;
-   const piece=box(w,h,d,Math.random()<.19?b.roof:b.wall,px,py,pz,scene,true);
-   debris.push({mesh:piece,vel:new THREE.Vector3((Math.random()-.5)*8,3+Math.random()*8,(Math.random()-.5)*8),spin:new THREE.Vector3((Math.random()-.5)*1.5,(Math.random()-.5)*1.5,(Math.random()-.5)*1.5),size:h,age:0});
- }
- notify(`${b.name} · 블록 해체 완료`);updateHUD();
-}
-function reset(){for(const p of debris)scene.remove(p.mesh);debris.length=0;destroyedCount=0;for(const b of buildings){b.group.visible=true;b.label.visible=true;b.destroyed=false}updateHUD();notify('전체 캠퍼스 복구 완료')}
-document.getElementById('reset').addEventListener('click',reset);document.getElementById('home').addEventListener('click',()=>{camera.position.copy(initialCamera);controls.target.copy(initialTarget);controls.update()});
-const caster=new THREE.Raycaster(),cursor=new THREE.Vector2();let pressed=null;
-renderer.domElement.addEventListener('pointerdown',e=>{pressed={x:e.clientX,y:e.clientY,time:performance.now()}});
-renderer.domElement.addEventListener('pointerup',e=>{if(!pressed)return;const dist=Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y);pressed=null;if(dist>9)return;const rect=renderer.domElement.getBoundingClientRect();cursor.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);caster.setFromCamera(cursor,camera);const hits=caster.intersectObjects(buildings.filter(b=>!b.destroyed).map(b=>b.group),true);if(!hits.length)return;const id=meshOwner.get(hits[0].object),b=buildings.find(i=>i.id===id);if(b)collapse(b)});
-let last=performance.now();function draw(now){requestAnimationFrame(draw);const dt=Math.min(.04,(now-last)/1000);last=now;for(const p of debris){p.age+=dt;if(p.mesh.position.y>p.size/2+.01){p.vel.y-=22*dt;p.mesh.position.addScaledVector(p.vel,dt);p.mesh.rotation.x+=p.spin.x*dt;p.mesh.rotation.y+=p.spin.y*dt;p.mesh.rotation.z+=p.spin.z*dt;if(p.mesh.position.y<p.size/2){p.mesh.position.y=p.size/2;p.vel.y=Math.abs(p.vel.y)*.2}}else{p.mesh.position.y=p.size/2;p.vel.x*=Math.exp(-2*dt);p.vel.z*=Math.exp(-2*dt);p.mesh.position.x+=p.vel.x*dt;p.mesh.position.z+=p.vel.z*dt}}controls.update();renderer.render(scene,camera)}requestAnimationFrame(draw);
-window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
-updateHUD();document.getElementById('loading').remove();
-</script>
-</body></html>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
