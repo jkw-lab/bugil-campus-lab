@@ -4,7 +4,7 @@ import { FACILITIES, LANDMARKS, CAMERA_PRESETS } from './campus-data.js';
 import { ROAD_PATHS, WALK_PATHS, BOUNDARY } from './roads-data.js';
 import { elevation, heightColor, RELATIVE_HEIGHT_RANGE } from './terrain-model.js';
 
-// BUGIL CAMPUS LAB v0.4 — approximate illustrated campus, not geospatial survey data.
+// BUGIL CAMPUS LAB v0.4.2 — redesigned baseball, dorm and clear athletic field, not geospatial survey data.
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfd4dc);
 scene.fog = new THREE.FogExp2(0xbfd4dc, 0.00115);
@@ -143,20 +143,72 @@ for(let q=-1;q<=1;q++)plane(scene,2,110,M.field,-5+q*53,.458,5);
 plane(scene,90,36,M.walkway,-8,.32,-91);
 plane(scene,80,30,M.grass,-8,.36,-93);
 plane(scene,68,16,M.walkway,-8,.37,86);
-// Baseball field: a separate, broadly circular western outfield.
-const baseball=new THREE.Mesh(new THREE.CircleGeometry(67,72),M.turf);
-baseball.rotation.x=-Math.PI/2;baseball.position.set(-214,elevation(-214,106)+.28,106);scene.add(baseball);
-const diamond=new THREE.Mesh(new THREE.CircleGeometry(33,64),M.sand);
-diamond.rotation.x=-Math.PI/2;diamond.position.set(-214,elevation(-214,106)+.305,106);scene.add(diamond);
-const infield=new THREE.Mesh(new THREE.PlaneGeometry(31,31),M.field);
-infield.rotation.x=-Math.PI/2;infield.rotation.z=Math.PI/4;infield.position.set(-214,elevation(-214,106)+.325,106);scene.add(infield);
-const mound=new THREE.Mesh(new THREE.CircleGeometry(4,24),M.sand);
-mound.rotation.x=-Math.PI/2;mound.position.set(-214,elevation(-214,106)+.34,106);scene.add(mound);
-// Outfield boundary and compact western auxiliary buildings.
-for(let i=0;i<20;i++){
- const t=.15+i/19*Math.PI*.9,x=-214-68*Math.cos(t),z=106-68*Math.sin(t);
- cuboid(scene,1.5,1.5,1.5,M.dark,x,elevation(x,z)+.75,z,false);
+// Baseball: curved outfield with two foul edges, distinct dirt infield and striped turf.
+// Its exact geometry is a visual approximation of the user-provided satellite photos.
+const home={x:-164,z:58},outfieldRadiusX=125,outfieldRadiusZ=121;
+function baseballPoint(rx,rz,angle,scale=1){
+ return [home.x-rx*Math.cos(angle)*scale,home.z+rz*Math.sin(angle)*scale];
 }
+function fanMesh(rx,rz,material,offset=.4,segments=72){
+ const vertices=[home.x,elevation(home.x,home.z)+offset,home.z],idx=[];
+ for(let i=0;i<=segments;i++){
+  const angle=i*Math.PI/(2*segments),[x,z]=baseballPoint(rx,rz,angle);
+  vertices.push(x,elevation(x,z)+offset,z);
+  if(i>0)idx.push(0,i,i+1);
+ }
+ const geom=new THREE.BufferGeometry();
+ geom.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+ geom.setIndex(idx);geom.computeVertexNormals();
+ const mesh=new THREE.Mesh(geom,material);mesh.receiveShadow=true;scene.add(mesh);
+ return mesh;
+}
+// Clay-colored narrow warning track around the curved green field.
+fanMesh(outfieldRadiusX+5,outfieldRadiusZ+5,M.sand,.43);
+fanMesh(outfieldRadiusX,outfieldRadiusZ,M.turf,.48);
+// Sector-shaped infield and smaller turf square between the bases.
+fanMesh(49,48,M.sand,.53,40);
+const innerSquare=new THREE.BufferGeometry();
+const infieldCorners=[
+ [home.x-4,home.z+4],[home.x-33,home.z+4],
+ [home.x-33,home.z+33],[home.x-4,home.z+33]
+];
+const innerVertices=[],innerIdx=[0,2,1,0,3,2];
+for(const [x,z] of infieldCorners)innerVertices.push(x,elevation(x,z)+.56,z);
+innerSquare.setAttribute('position',new THREE.Float32BufferAttribute(innerVertices,3));
+innerSquare.setIndex(innerIdx);innerSquare.computeVertexNormals();
+const innerGrass=new THREE.Mesh(innerSquare,M.grass);innerGrass.material.side=THREE.DoubleSide;
+scene.add(innerGrass);
+// Pitcher's mound, bases and fair/foul boundary markings.
+const mound=new THREE.Mesh(new THREE.CircleGeometry(3.25,24),M.sand);
+mound.rotation.x=-Math.PI/2;
+mound.position.set(home.x-20,elevation(home.x-20,home.z+20)+.65,home.z+20);
+scene.add(mound);
+const baseballChalk=new THREE.LineBasicMaterial({color:0xf3eee1});
+function chalkLine(from,to,atHeight=.73){
+ const points=[];
+ for(let i=0;i<=24;i++){
+  const t=i/24,x=from[0]+(to[0]-from[0])*t,z=from[1]+(to[1]-from[1])*t;
+  points.push(new THREE.Vector3(x,elevation(x,z)+atHeight,z));
+ }
+ const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),baseballChalk);
+ scene.add(line);
+}
+chalkLine([home.x,home.z],[home.x-outfieldRadiusX,home.z]);
+chalkLine([home.x,home.z],[home.x,home.z+outfieldRadiusZ]);
+for(const [x,z] of [[home.x,home.z],[home.x-32,home.z],[home.x-32,home.z+32],[home.x,home.z+32]]){
+ const base=cuboid(scene,2.1,.14,2.1,M.white,x,elevation(x,z)+.72,z,false);
+ base.rotation.y=Math.PI/4;
+}
+// Curved fence follows the outfield edge rather than enclosing a round disc.
+const fencePoints=[];
+for(let i=0;i<=48;i++){
+ const theta=i*Math.PI/(2*48),[x,z]=baseballPoint(outfieldRadiusX+5,outfieldRadiusZ+5,theta);
+ const terrainY=elevation(x,z);
+ fencePoints.push(new THREE.Vector3(x,terrainY+2.6,z));
+ if(i%3===0)cuboid(scene,.55,5,.55,M.dark,x,terrainY+2.5,z,false);
+}
+scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(fencePoints),
+ new THREE.LineBasicMaterial({color:0x30444b})));
 const westAnnex=new THREE.Group();
 westAnnex.position.set(-246,elevation(-246,29),29);scene.add(westAnnex);
 cuboid(westAnnex,36,10,17,M.pale,0,5,0);
@@ -190,7 +242,16 @@ cuboid(southAnnex,26.5,1,19.5,M.greenRoof,0,13.5,0);
 let rngSeed=91381;function rnd(){rngSeed=(rngSeed*1664525+1013904223)>>>0;return rngSeed/4294967296}
 const trunkGeo=new THREE.CylinderGeometry(.35,.55,1,5),leafGeo=new THREE.IcosahedronGeometry(1,0);
 const trees=[];
-function addTree(x,z,s){trees.push([x,z,s])}
+function addTree(x,z,s){
+ // No trees in or immediately across the girls' athletic ground.
+ if(Math.abs(x-179)<60 && Math.abs(z-17)<48)return;
+ // Also keep the new fan-shaped baseball outfield clear of forest instances.
+ if(x<=home.x+9 && z>=home.z-9){
+  const r=Math.hypot((x-home.x)/141,(z-home.z)/137);
+  if(r<1.06)return;
+ }
+ trees.push([x,z,s]);
+}
 for(let i=0;i<1370;i++){
  const x=(rnd()-.5)*795,z=(rnd()-.5)*730;
  const woodland=z<-176 || x<-284 || (z<-110&&x<-100&&rnd()<.6) || (x>212&&z<-70);
