@@ -167,7 +167,7 @@ const girlsSchool=new THREE.Group();
 girlsSchool.position.set(194,elevation(194,-114),-114);scene.add(girlsSchool);
 cuboid(girlsSchool,53,19,15,M.pale,0,9.5,0);
 cuboid(girlsSchool,54,.8,16,M.greenRoof,0,19.4,0);
-for(const [x,z,w,d,h] of [[-37,19,30,16,17],[1,28,45,15,20],[40,14,30,16,17]]){
+for(const [x,z,w,d,h] of [[-12,19,30,16,17],[1,28,45,15,20],[40,14,30,16,17]]){
  cuboid(girlsSchool,w,h,d,M.pale,x,h/2,z);cuboid(girlsSchool,w+.5,.7,d+.5,M.greenRoof,x,h+.35,z);
 }
 // Eastern stairs/terraces by the girls' ground.
