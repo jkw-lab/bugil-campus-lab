@@ -399,7 +399,7 @@ function toggleMode(m){
  for(const id of ['inspect','collapse']){
   const e=document.getElementById(id),on=id===m;e.classList.toggle('active',on);e.setAttribute('aria-pressed',String(on));
  }
- document.getElementById('status-sub').textContent=m==='collapse'?'건물을 터치하면 블록으로 분리됩니다':'위치·비율은 사진 기반 추정치';
+ document.getElementById('status-sub').textContent=m==='collapse'?'건물을 터치하면 블록으로 분리됩니다':'사진 기반 상대 고도 · 실측 아님';
  showNotice(m==='collapse'?'블록 분리 모드: 건물을 선택하세요':'건물 탐색 모드');
 }
 let heightView=false;
@@ -452,7 +452,7 @@ function separateBuilding(b){
 function restore(){
  for(const o of debris){scene.remove(o.m);o.m.geometry=boxGeo}debris.length=0;
  FACILITIES.forEach(b=>{b.collapsed=false;b.group.visible=true;b.label.visible=labelsVisible});
- document.getElementById('status-title').textContent='주요 건물 7동 · 도로·지형';
+ document.getElementById('status-title').textContent='주요 건물 7동 · 지형 v0.4';
  showNotice('전체 캠퍼스 복구 완료');
 }
 document.getElementById('restore').addEventListener('click',restore);
