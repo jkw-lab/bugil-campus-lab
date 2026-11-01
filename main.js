@@ -463,7 +463,7 @@ function createFacility(b){
     shrub.position.set(x,elevation(x,z)+1.5,z);scene.add(shrub);
   }
  }
- b.group=group;b.collapsed=false;b.major=major;b.label=createLabel(b.name,b.x,elevation(b.x,b.z)+b.parts[0].h+10,b.z,18);
+ b.group=group;b.collapsed=false;b.major=major;b.label=createLabel(b.name,b.x,elevation(b.x,b.z)+Math.max(...b.parts.map(p=>p.h))+11,b.z,18);
  facilityObjects.set(b.id,b);
 }
 function createLabel(text,x,y,z,scale=15){
