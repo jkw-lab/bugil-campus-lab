@@ -4,7 +4,7 @@ import { FACILITIES, LANDMARKS, CAMERA_PRESETS } from './campus-data.js';
 import { ROAD_PATHS, WALK_PATHS, BOUNDARY } from './roads-data.js';
 import { elevation, heightColor, RELATIVE_HEIGHT_RANGE } from './terrain-model.js';
 
-// BUGIL CAMPUS LAB v0.4.2 — redesigned baseball, dorm and clear athletic field, not geospatial survey data.
+// BUGIL CAMPUS LAB v0.4.3 — redesigned baseball, dorm and clear athletic field, not geospatial survey data.
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfd4dc);
 scene.fog = new THREE.FogExp2(0xbfd4dc, 0.00115);
@@ -55,6 +55,11 @@ const M={
  glassBlue:new THREE.MeshStandardMaterial({color:0x789eaf,roughness:.26,metalness:.11}),
  brick:new THREE.MeshStandardMaterial({color:0xa76658}),
  brick2:new THREE.MeshStandardMaterial({color:0xbb806b}),
+ terracotta:new THREE.MeshStandardMaterial({color:0xc86e34,roughness:.87}),
+ glassDark:new THREE.MeshStandardMaterial({color:0x27475b,roughness:.26,metalness:.13}),
+ whiteTrim:new THREE.MeshStandardMaterial({color:0xf1efe5,roughness:.65}),
+ roofTrim:new THREE.MeshStandardMaterial({color:0x415b52,roughness:.85}),
+ clockFace:new THREE.MeshStandardMaterial({color:0xece9dc,roughness:.83}),
  greenRoof:new THREE.MeshStandardMaterial({color:0x66876f}),
  solar:new THREE.MeshStandardMaterial({color:0x354c67,metalness:.3,roughness:.3}),
  roof:new THREE.MeshStandardMaterial({color:0x9a9c94}),
@@ -302,7 +307,8 @@ for(const t of crowns){t.instanceMatrix.needsUpdate=true;scene.add(t);}
 // Buildings: multipart silhouettes, visible windows, roof details.
 const meshToFacility=new Map(),facilityObjects=new Map(),windowInstances=[],allLabels=[],debris=[];
 function facadeFor(b){
- if(b.type==='dorm')return {wall:M.brick,roof:M.greenRoof,glass:M.glassBlue};
+ if(b.id==='dormOld')return {wall:M.pale,roof:M.greenRoof,glass:M.glass};
+ if(b.id==='dormNew')return {wall:M.brick,roof:M.greenRoof,glass:M.glassDark};
  if(b.type==='gym')return {wall:M.pale,roof:M.stone,glass:M.glass};
  if(b.type==='modern')return {wall:M.pale,roof:M.greenRoof,glass:M.glassBlue};
  return {wall:M.white,roof:M.roof,glass:M.glass};
@@ -335,8 +341,66 @@ function addPediment(g,p){
  const m=new THREE.Mesh(ge,new THREE.MeshStandardMaterial({color:0xe9e8df,side:THREE.DoubleSide}));
  g.add(m);
  cuboid(g,23,.9,p.d*.5,M.roof,0,p.h+.2,0);
- cuboid(g,3.7,2.4,.18,M.dark,0,p.h+2.1,centerZ+.12);
+ addClockFace(g,0,p.h+2.7,centerZ+.22,1.35);
 }
+
+function addClockFace(parent,x,y,z,r){
+ const dial=new THREE.Mesh(new THREE.CircleGeometry(r,32),M.clockFace);
+ dial.position.set(x,y,z);parent.add(dial);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(r,.17,6,32),M.dark);
+ ring.position.set(x,y,z+.075);parent.add(ring);
+ const hands=new THREE.Group();hands.position.set(x,y,z+.14);
+ cuboid(hands,.12,r*.64,.08,M.dark,0,r*.20,0,false);
+ const shortHand=cuboid(hands,.12,r*.43,.08,M.dark,-r*.17,.04,0,false);
+ shortHand.rotation.z=Math.PI/3;
+ parent.add(hands);
+}
+function putRoofBorder(part,p,mat){
+ cuboid(part,p.w+.6,.65,.38,mat,0,p.h+.73,p.d/2+.18,false);
+ cuboid(part,p.w+.6,.65,.38,mat,0,p.h+.73,-p.d/2-.18,false);
+ cuboid(part,.38,.65,p.d+.6,mat,p.w/2+.18,p.h+.73,0,false);
+ cuboid(part,.38,.65,p.d+.6,mat,-p.w/2-.18,p.h+.73,0,false);
+}
+function dormNewPhotoDetail(part,p){
+ // Regular brick bays, green roof with deep parapet, darker vertical tower glazing.
+ putRoofBorder(part,p,M.brick2);
+ if(p.detail==='clockTower'){
+  cuboid(part,p.w*.71,p.h*.62,.36,M.glassDark,0,p.h*.38,p.d/2+.23,false);
+  for(let k=-3;k<=3;k++)cuboid(part,.24,p.h*.57,.43,M.brick2,k*p.w*.095,p.h*.38,p.d/2+.51,false);
+  addClockFace(part,0,p.h-3.3,p.d/2+.73,1.75);
+  // Photo also shows a second clock on the tower's side wall.
+  const side=new THREE.Group();side.position.set(p.w/2+.45,p.h-3.3,0);side.rotation.y=Math.PI/2;
+  addClockFace(side,0,0,0,1.55);part.add(side);
+  cuboid(part,p.w+.8,1.2,p.d+.8,M.brick,0,p.h+.65,0,false);
+ }else{
+  for(let j=-p.w/2+7;j<p.w/2-5;j+=10.5)
+   cuboid(part,.45,p.h-3,.5,M.brick2,j,p.h/2,p.d/2+.21,false);
+  if(p.detail==='rearBlock'){
+   for(let i=0;i<4;i++)
+    cuboid(part,5,.18,8,M.solar,-11+i*7,p.h+1.2,0,false);
+  }
+ }
+}
+function adanPhotoDetail(part,p){
+ // Blue-glass facade with slim silver vertical mullions and light floor ribbons.
+ if(p===undefined)return;
+ putRoofBorder(part,p,M.whiteTrim);
+ const h=p.h;
+ cuboid(part,p.w-2,h*.82,.38,M.glassBlue,0,h*.55,p.d/2+.34,false);
+ for(let x=-p.w/2+3;x<p.w/2-2;x+=4.3){
+  cuboid(part,.28,h*.85,.43,M.whiteTrim,x,h*.55,p.d/2+.57,false);
+ }
+ for(let y=4;y<h;y+=4.4) cuboid(part,p.w-1,.31,.44,M.whiteTrim,0,y,p.d/2+.58,false);
+}
+function gymPhotoDetail(part,p){
+ // White horizontal canopy with a large glazed front elevation.
+ cuboid(part,p.w+.9,2.1,p.d+.9,M.whiteTrim,0,p.h+.35,0,false);
+ cuboid(part,p.w*.72,p.h*.62,.38,M.glassBlue,0,p.h*.39,p.d/2+.24,false);
+ for(let i=-3;i<=3;i++)
+  cuboid(part,.48,p.h*.64,.5,M.whiteTrim,i*p.w*.10,p.h*.39,p.d/2+.54,false);
+ cuboid(part,p.w*.46,.65,6,M.stone,0,4,p.d/2+3,false);
+}
+
 function createFacility(b){
  const group=new THREE.Group();group.position.set(b.x,elevation(b.x,b.z),b.z);scene.add(group);
  const palette=facadeFor(b),major=[];
@@ -345,7 +409,7 @@ function createFacility(b){
   let wall=palette.wall,roof=palette.roof;
   if(b.id==='adan'&&p===b.parts[0])wall=M.glassBlue;
   if(b.id==='summit')wall=M.white;
-  if(b.id==='dormOld'&&p===b.parts[0])wall=M.pale;
+  if(b.id==='dormOld')wall=M.pale;
   if(b.id==='dormNew')roof=M.greenRoof;
   const body=cuboid(part,p.w,p.h,p.d,wall,0,p.h/2,0);
   major.push(body);meshToFacility.set(body,b);
@@ -353,7 +417,7 @@ function createFacility(b){
   windowGrid(part,p,palette.glass);
   // Horizontal lintels help indicate floor separation without expensive unique geometries.
   for(let y=4.6;y<p.h-1;y+=4.9){
-   cuboid(part,p.w+.25,.18,p.d+.25,b.type==='dorm'?M.brick2:M.concrete,0,y,0,false)
+   cuboid(part,p.w+.25,.18,p.d+.25,b.id==='dormNew'?M.brick2:M.concrete,0,y,0,false)
   }
   if(b.id==='main'){
     addPediment(part,p);
@@ -366,10 +430,17 @@ function createFacility(b){
     cuboid(part,p.w*.35,5,.22,M.glassBlue,0,4,p.d/2+.23);
   }
   if(b.id==='adan'){
-    cuboid(part,p.w*.53,p.h*.46,.3,M.glassBlue,-p.w*.08,p.h*.34,p.d/2+.2,false);
+    if(p===b.parts[0])adanPhotoDetail(part,p);
+    if(p===b.parts[1]){
+      cuboid(part,p.w*.8,3.1,p.d*.38,M.terracotta,0,3.2,p.d/2+3,false);
+      cuboid(part,p.w*.63,1.0,p.d*.65,M.terracotta,0,7.1,p.d/2+1,false);
+    }
   }
-  if(b.type==='dorm'){
-    cuboid(part,Math.min(10,p.w*.3),3,.35,M.dark,0,1.9,p.d/2+.25);
+  if(b.id==='gym')gymPhotoDetail(part,p);
+  if(b.id==='dormNew')dormNewPhotoDetail(part,p);
+  if(b.id==='dormOld') {
+    putRoofBorder(part,p,M.roofTrim);
+    cuboid(part,p.w*.72,p.h*.32,.25,M.glassBlue,0,p.h*.27,p.d/2+.2,false);
   }
  }
  if(b.id==='main'){
@@ -383,7 +454,14 @@ function createFacility(b){
   }
  }
  if(b.id==='dormNew'){
-  plane(scene,73,20,M.walkway,b.x,.33,b.z+51);
+  // Courtyard remains visibly open between the western and middle wings.
+  plane(scene,23,32,M.grass,b.x-17,.49,b.z+13);
+  plane(scene,13,25,M.walkway,b.x+17,.50,b.z+22);
+  for(let j=0;j<3;j++) {
+    const x=b.x-17+j*7,z=b.z+19;
+    const shrub=new THREE.Mesh(new THREE.DodecahedronGeometry(1.4,0),M.tree2);
+    shrub.position.set(x,elevation(x,z)+1.5,z);scene.add(shrub);
+  }
  }
  b.group=group;b.collapsed=false;b.major=major;b.label=createLabel(b.name,b.x,elevation(b.x,b.z)+b.parts[0].h+10,b.z,18);
  facilityObjects.set(b.id,b);
