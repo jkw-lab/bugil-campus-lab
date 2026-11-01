@@ -164,7 +164,7 @@ cuboid(westUtility,22,.8,14,M.greenRoof,0,7.4,0);
 plane(scene,89,65,M.field,160,.34,25);
 plane(scene,84,61,M.sand,160,.375,25);
 const girlsSchool=new THREE.Group();
-girlsSchool.position.set(167,elevation(167,-114),-114);scene.add(girlsSchool);
+girlsSchool.position.set(194,elevation(194,-114),-114);scene.add(girlsSchool);
 cuboid(girlsSchool,53,19,15,M.pale,0,9.5,0);
 cuboid(girlsSchool,54,.8,16,M.greenRoof,0,19.4,0);
 for(const [x,z,w,d,h] of [[-37,19,30,16,17],[1,28,45,15,20],[40,14,30,16,17]]){
