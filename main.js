@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { FACILITIES, LANDMARKS, CAMERA_PRESETS } from './campus-data.js';
 import { ROAD_PATHS, WALK_PATHS, BOUNDARY } from './roads-data.js';
+import { elevation, heightColor, RELATIVE_HEIGHT_RANGE } from './terrain-model.js';
 
-// BUGIL CAMPUS LAB v0.2 — approximate illustrated campus, not geospatial survey data.
+// BUGIL CAMPUS LAB v0.4 — approximate illustrated campus, not geospatial survey data.
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfd4dc);
 scene.fog = new THREE.FogExp2(0xbfd4dc, 0.00115);
@@ -68,15 +69,20 @@ function cuboid(parent,w,h,d,mat,x,y,z,cast=true){
  const m=new THREE.Mesh(boxGeo,mat);
  m.scale.set(w,h,d);m.position.set(x,y,z);m.castShadow=cast;m.receiveShadow=true;parent.add(m);return m;
 }
+// All ground-painted surfaces share the same sampled height field as the terrain and roads.
 function plane(parent,w,d,material,x,y,z,rot=0){
- const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),material);
- m.rotation.set(-Math.PI/2,0,rot);m.position.set(x,y,z);m.receiveShadow=true;parent.add(m);return m;
-}
-function elevation(x,z){
- const north=Math.pow(Math.max(0,(-z-171)/150),1.38)*17;
- const west=Math.pow(Math.max(0,(-x-260)/115),1.3)*10;
- const east=Math.pow(Math.max(0,(x-185)/140),1.3)*5;
- return north+west+east+Math.sin(x*.017+z*.009)*.22;
+ const nx=Math.min(22,Math.max(1,Math.ceil(w/6)));
+ const nz=Math.min(22,Math.max(1,Math.ceil(d/6)));
+ const g=new THREE.PlaneGeometry(w,d,nx,nz);
+ g.rotateX(-Math.PI/2);
+ if(rot)g.rotateY(rot);
+ const pts=g.attributes.position;
+ for(let i=0;i<pts.count;i++){
+  pts.setY(i,elevation(x+pts.getX(i),z+pts.getZ(i))+y);
+ }
+ g.computeVertexNormals();
+ const m=new THREE.Mesh(g,material);
+ m.position.set(x,0,z);m.receiveShadow=true;parent.add(m);return m;
 }
 function insideBoundary(x,z){
  let inside=false;
@@ -114,7 +120,7 @@ function path(points,width,material=M.asphalt){
   const t=i/samples,p=curve.getPoint(t),dir=curve.getTangent(t);
   const r=Math.max(.001,Math.hypot(dir.x,dir.z)),ox=dir.z/r*width/2,oz=-dir.x/r*width/2;
   const left=[p.x-ox,p.z-oz],right=[p.x+ox,p.z+oz];
-  verts.push(left[0],elevation(...left)+.19,left[1],right[0],elevation(...right)+.19,right[1]);
+  verts.push(left[0],elevation(...left)+.48,left[1],right[0],elevation(...right)+.48,right[1]);
   uv.push(0,t*points.length,1,t*points.length);
   if(i>0){const j=i*2;idx.push(j-2,j-1,j,j-1,j+1,j)}
  }
@@ -139,16 +145,16 @@ plane(scene,80,30,M.grass,-8,.36,-93);
 plane(scene,68,16,M.walkway,-8,.37,86);
 // Baseball field: a separate, broadly circular western outfield.
 const baseball=new THREE.Mesh(new THREE.CircleGeometry(67,72),M.turf);
-baseball.rotation.x=-Math.PI/2;baseball.position.set(-205,elevation(-205,105)+.24,105);scene.add(baseball);
+baseball.rotation.x=-Math.PI/2;baseball.position.set(-214,elevation(-214,106)+.28,106);scene.add(baseball);
 const diamond=new THREE.Mesh(new THREE.CircleGeometry(33,64),M.sand);
-diamond.rotation.x=-Math.PI/2;diamond.position.set(-205,elevation(-205,105)+.265,105);scene.add(diamond);
+diamond.rotation.x=-Math.PI/2;diamond.position.set(-214,elevation(-214,106)+.305,106);scene.add(diamond);
 const infield=new THREE.Mesh(new THREE.PlaneGeometry(31,31),M.field);
-infield.rotation.x=-Math.PI/2;infield.rotation.z=Math.PI/4;infield.position.set(-205,elevation(-205,105)+.285,105);scene.add(infield);
+infield.rotation.x=-Math.PI/2;infield.rotation.z=Math.PI/4;infield.position.set(-214,elevation(-214,106)+.325,106);scene.add(infield);
 const mound=new THREE.Mesh(new THREE.CircleGeometry(4,24),M.sand);
-mound.rotation.x=-Math.PI/2;mound.position.set(-205,elevation(-205,105)+.30,105);scene.add(mound);
+mound.rotation.x=-Math.PI/2;mound.position.set(-214,elevation(-214,106)+.34,106);scene.add(mound);
 // Outfield boundary and compact western auxiliary buildings.
 for(let i=0;i<20;i++){
- const t=.15+i/19*Math.PI*.9,x=-205-68*Math.cos(t),z=105-68*Math.sin(t);
+ const t=.15+i/19*Math.PI*.9,x=-214-68*Math.cos(t),z=106-68*Math.sin(t);
  cuboid(scene,1.5,1.5,1.5,M.dark,x,elevation(x,z)+.75,z,false);
 }
 const westAnnex=new THREE.Group();
@@ -161,8 +167,8 @@ westUtility.position.set(-233,elevation(-233,-15),-15);scene.add(westUtility);
 cuboid(westUtility,21,7,13,M.white,0,3.5,0);
 cuboid(westUtility,22,.8,14,M.greenRoof,0,7.4,0);
 // Separate eastern girls' school recreation ground and adjoining school blocks.
-plane(scene,89,65,M.field,160,.34,25);
-plane(scene,84,61,M.sand,160,.375,25);
+plane(scene,89,65,M.field,179,.34,17);
+plane(scene,84,61,M.sand,179,.375,17);
 const girlsSchool=new THREE.Group();
 girlsSchool.position.set(194,elevation(194,-114),-114);scene.add(girlsSchool);
 cuboid(girlsSchool,53,19,15,M.pale,0,9.5,0);
@@ -200,7 +206,7 @@ for(let i=0;i<1370;i++){
 }
 for(let i=0;i<160;i++){
  const x=-319+rnd()*130,z=-146+rnd()*335;
- if(Math.hypot(x+205,z-105)<74 || Math.hypot(x+8,z-12)<89)continue;
+ if(Math.hypot(x+214,z-106)<76 || Math.hypot(x+8,z-12)<89)continue;
  if(FACILITIES.some(b=>Math.hypot(x-b.x,z-b.z)<30))continue;
  addTree(x,z,.62+rnd()*.7);
 }
@@ -333,10 +339,10 @@ function createLabel(text,x,y,z,scale=15){
 }
 FACILITIES.forEach(createFacility);
 const landmarkLabels=[
- createLabel('대운동장',-5,8,5,15),
- createLabel('야구장',-205,9,105,14),
- createLabel('북일랜드',-32,9,185,12),
- createLabel('북일여고 운동장',158,8,27,11)
+ createLabel('대운동장',-5,elevation(-5,5)+9,5,15),
+ createLabel('야구장',-214,elevation(-214,106)+9,106,14),
+ createLabel('북일랜드',-21,elevation(-21,179)+9,179,12),
+ createLabel('북일여고 운동장',179,elevation(179,17)+8,17,11)
 ];
 // User interactions.
 const facilityList=document.getElementById('facilities'),detail=document.getElementById('detail');
@@ -372,9 +378,11 @@ function select(b,move){
  const title=document.createElement('strong');title.textContent=b.no+' · '+b.name;
  detail.append(title,document.createElement('br'),document.createTextNode(text));
  if(b.confidence){detail.append(document.createElement('br'),document.createTextNode('위치 판독 신뢰도: '+b.confidence));}
+ detail.append(document.createElement('br'),document.createTextNode('상대 높이: '+elevation(b.x,b.z).toFixed(1)+' (게임 내 추정값)'));
  if(move){
   const high=b.parts?.[0]?.h||10,focus=b.focus||36;
-  flyTo([b.x-focus,b.parts?high+focus*.85:focus*.9,b.z+focus],[b.x,b.parts?high*.55:0,b.z]);
+  const ground=elevation(b.x,b.z);
+  flyTo([b.x-focus,ground+(b.parts?high+focus*.85:focus*.9),b.z+focus],[b.x,ground+(b.parts?high*.55:0),b.z]);
  }
 }
 select(FACILITIES[0],false);
@@ -391,13 +399,26 @@ function toggleMode(m){
  for(const id of ['inspect','collapse']){
   const e=document.getElementById(id),on=id===m;e.classList.toggle('active',on);e.setAttribute('aria-pressed',String(on));
  }
- document.getElementById('status-sub').textContent=m==='collapse'?'건물을 터치하면 블록으로 분리됩니다':'위치·비율은 사진 기반 추정치';
+ document.getElementById('status-sub').textContent=m==='collapse'?'건물을 터치하면 블록으로 분리됩니다':'사진 기반 상대 고도 · 실측 아님';
  showNotice(m==='collapse'?'블록 분리 모드: 건물을 선택하세요':'건물 탐색 모드');
 }
+let heightView=false;
 document.getElementById('detail-view').addEventListener('click',e=>{
- windowsEnhanced=!windowsEnhanced;windowInstances.forEach(w=>w.material=windowsEnhanced?M.solar:M.glass);
- e.currentTarget.classList.toggle('active',windowsEnhanced);
- showNotice(windowsEnhanced?'창문 대비 강조':'기본 창문 색상');
+ heightView=!heightView;
+ const c=terrain.getAttribute('color');
+ for(let i=0;i<c.count;i++){
+  if(heightView){
+   const relative=(a.getY(i)-RELATIVE_HEIGHT_RANGE.min)/(RELATIVE_HEIGHT_RANGE.max-RELATIVE_HEIGHT_RANGE.min);
+   const rgb=heightColor(relative);
+   c.setXYZ(i,rgb[0],rgb[1],rgb[2]);
+  }else{
+   const j=i*3;c.setXYZ(i,terrainColors[j],terrainColors[j+1],terrainColors[j+2]);
+  }
+ }
+ c.needsUpdate=true;
+ e.currentTarget.classList.toggle('active',heightView);
+ document.getElementById('status-sub').textContent=heightView?'색상은 실측이 아닌 추정 상대 높이':'배치와 지면 높이는 사진 기반 추정값';
+ showNotice(heightView?'지형 높이 확인: 파랑=낮음, 주황=높음':'일반 지형 보기');
 });
 document.getElementById('labels').addEventListener('click',e=>{
  labelsVisible=!labelsVisible;allLabels.forEach(s=>s.visible=labelsVisible);
@@ -431,7 +452,7 @@ function separateBuilding(b){
 function restore(){
  for(const o of debris){scene.remove(o.m);o.m.geometry=boxGeo}debris.length=0;
  FACILITIES.forEach(b=>{b.collapsed=false;b.group.visible=true;b.label.visible=labelsVisible});
- document.getElementById('status-title').textContent='주요 건물 7동 · 도로·지형';
+ document.getElementById('status-title').textContent='주요 건물 7동 · 지형 v0.4';
  showNotice('전체 캠퍼스 복구 완료');
 }
 document.getElementById('restore').addEventListener('click',restore);
