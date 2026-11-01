@@ -5,24 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101820">
 <meta name="description" content="BUGIL CAMPUS LAB: 공개 사진 자료로 재구성한 북일고 3D 캠퍼스 시제품.">
-<title>BUGIL CAMPUS LAB · v0.4</title>
+<title>BUGIL CAMPUS LAB · v0.4.2 DEM Preview</title>
 <link rel="stylesheet" href="./styles.css">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head>
 <body>
 <div id="world"></div>
 <div class="topbar">
-  <div class="brand"><div class="kicker">BUGIL · CAMPUS LAB</div><h1>북일고 3D 캠퍼스</h1><small>PHOTO-REFERENCED TERRAIN · v0.4</small></div>
+  <div class="brand"><div class="kicker">BUGIL · CAMPUS LAB</div><h1>북일고 3D 캠퍼스</h1><small>DEM TERRAIN · CAMPUS MODELLING · v0.4.2</small></div>
   <div class="topright" id="views"><button data-view="campus" class="active">전체</button><button data-view="main">본관</button><button data-view="field">운동장</button><button data-view="dorm">기숙사</button></div>
 </div>
 <div class="panel">
-  <div class="panelhead"><div class="mini">CAMPUS INDEX</div><h2>건물과 시설</h2><p>위성사진 기준으로 건물 배치와 지형을 보정했습니다. 높이는 실측이 아닌 추정값입니다.</p></div>
+  <div class="panelhead"><div class="mini">CAMPUS INDEX</div><h2>건물과 시설</h2><p>등고선 기반 지형에 야구장·기숙사 형태를 보정했습니다. 지형의 좌표 정렬은 아직 추정값입니다.</p></div>
   <div class="facilitylist" id="facilities"></div>
   <div class="detail" id="detail">건물 이름을 누르면 해당 장소로 이동합니다.</div>
 </div>
-<div class="status"><div>모델링 진행 상태</div><b id="status-title">주요 건물 7동 · 지형 v0.4</b><div id="status-sub">사진 기반 상대 고도 · 실측 아님</div></div>
+<div class="status"><div>모델링 진행 상태</div><b id="status-title">주요 건물 7동 · 지형 v0.4</b><div id="status-sub">등고선 기반 추정 고도 · 기준점 임시 정렬</div></div>
 <div class="notice" id="notice"></div>
-<div class="footnote">실측 3D 모델이 아닌 독립 제작 시제품 · 원본 사진과 지도 자료는 3D 장면에 포함하지 않음</div>
+<div class="footnote">고도 기준점 정렬은 잠정값 · 건물 및 운동장 높이는 현장 측량값 아님</div>
 <div class="bottombar">
   <button class="tool active" id="inspect" aria-pressed="true"><span>⌖</span><b>건물 탐색</b></button>
   <button class="tool" id="detail-view"><span>▤</span><b>고도 보기</b></button>

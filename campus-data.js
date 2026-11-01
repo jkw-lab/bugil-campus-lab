@@ -16,7 +16,13 @@ export const FACILITIES = [
  {id:"dormOld",no:"06",name:"여송학사 본관",type:"dorm",confidence:"중간",x:5,z:-320,focus:57,
   parts:[{x:-7,z:3,w:44,d:20,h:20},{x:14,z:-14,w:28,d:20,h:16,rot:-0.25}],notes:"가장 북쪽 숲 안쪽의 기숙사 본관"},
  {id:"dormNew",no:"07",name:"여송학사 신관",type:"dorm",confidence:"높음",x:151,z:210,focus:66,
-  parts:[{x:-22,z:0,w:23,d:66,h:27},{x:12,z:-21,w:57,d:22,h:28},{x:35,z:18,w:22,d:45,h:26}],notes:"남동쪽 경계 · 녹색 지붕과 붉은 벽돌 복합동"}
+  parts:[
+   {x:-29,z:9,w:22,d:78,h:27},
+   {x:3,z:-24,w:72,d:22,h:27},
+   {x:39,z:3,w:22,d:65,h:26},
+   {x:-12,z:43,w:48,d:18,h:25},
+   {x:-22,z:-25,w:17,d:18,h:33}
+  ],notes:"남동쪽 경계 · 안뜰을 둘러싼 ㄷ자형 연결동과 출입부 높은 타워"}
 ];
 export const LANDMARKS = [
  {id:"field",no:"08",name:"대운동장",x:-5,z:5,kind:"field",notes:"본관 남쪽의 큰 흙 운동장"},
