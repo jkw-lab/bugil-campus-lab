@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { FACILITIES, LANDMARKS, CAMERA_PRESETS } from './campus-data.js';
+import { ROAD_PATHS, WALK_PATHS, BOUNDARY } from './roads-data.js';
 
 // BUGIL CAMPUS LAB v0.2 — approximate illustrated campus, not geospatial survey data.
 const scene = new THREE.Scene();
@@ -72,83 +73,134 @@ function plane(parent,w,d,material,x,y,z,rot=0){
  m.rotation.set(-Math.PI/2,0,rot);m.position.set(x,y,z);m.receiveShadow=true;parent.add(m);return m;
 }
 function elevation(x,z){
- const hillN=Math.pow(Math.max(0,(-z-175)/150),1.5)*31;
- const hillW=Math.pow(Math.max(0,(-x-207)/110),1.3)*19;
- return hillN+hillW+Math.sin(x*.018+z*.009)*.29;
+ const north=Math.pow(Math.max(0,(-z-171)/150),1.38)*17;
+ const west=Math.pow(Math.max(0,(-x-260)/115),1.3)*10;
+ const east=Math.pow(Math.max(0,(x-185)/140),1.3)*5;
+ return north+west+east+Math.sin(x*.017+z*.009)*.22;
 }
-const terrain=new THREE.PlaneGeometry(590,550,92,86);
+function insideBoundary(x,z){
+ let inside=false;
+ for(let i=0,j=BOUNDARY.length-1;i<BOUNDARY.length;j=i++){
+  const [xi,zi]=BOUNDARY[i],[xj,zj]=BOUNDARY[j];
+  if(((zi>z)!==(zj>z)) && x<(xj-xi)*(z-zi)/(zj-zi)+xi)inside=!inside;
+ }
+ return inside;
+}
+const terrain=new THREE.PlaneGeometry(820,765,155,141);
 terrain.rotateX(-Math.PI/2);
-const a=terrain.attributes.position;
-for(let i=0;i<a.count;i++){const x=a.getX(i),z=a.getZ(i);a.setY(i,elevation(x,z)-.8);}
+const a=terrain.attributes.position, terrainColors=[];
+const inGrass=new THREE.Color(0x8aa782),outsideGrass=new THREE.Color(0x789a78);
+const forestColor=new THREE.Color(0x557c5c),vColor=new THREE.Color();
+for(let i=0;i<a.count;i++){
+ const x=a.getX(i),z=a.getZ(i);
+ a.setY(i,elevation(x,z)-.5);
+ vColor.copy(insideBoundary(x,z)?inGrass:outsideGrass);
+ const forestFactor=THREE.MathUtils.clamp((-z-171)/120,0,.85);
+ vColor.lerp(forestColor,forestFactor);
+ const speckle=.94+.1*Math.sin(x*.43+z*.34)*Math.cos(x*.29-z*.37);
+ terrainColors.push(vColor.r*speckle,vColor.g*speckle,vColor.b*speckle);
+}
+terrain.setAttribute('color',new THREE.Float32BufferAttribute(terrainColors,3));
 terrain.computeVertexNormals();
-const land=new THREE.Mesh(terrain,M.grass);
+const terrainMaterial=M.grass.clone();terrainMaterial.color.setHex(0xffffff);terrainMaterial.vertexColors=true;
+const land=new THREE.Mesh(terrain,terrainMaterial);
 land.receiveShadow=true;scene.add(land);
-plane(scene,560,185,M.forest,-10,.04,-209);
+// Piecewise Catmull-Rom surface ribbons follow the user-marked roads.
 function path(points,width,material=M.asphalt){
- const vs=[],idx=[];
- for(let i=0;i<points.length;i++){
-  const [x,z]=points[i],pr=points[Math.max(0,i-1)],nx=points[Math.min(points.length-1,i+1)];
-  const dx=nx[0]-pr[0],dz=nx[1]-pr[1],r=Math.max(.001,Math.hypot(dx,dz));
-  const ox=dz/r*width/2,oz=-dx/r*width/2,y=elevation(x,z)+.2;
-  vs.push(x-ox,y,z-oz,x+ox,y,z+oz);
+ if(points.length<2)return;
+ const curve=new THREE.CatmullRomCurve3(points.map(([x,z])=>new THREE.Vector3(x,0,z)),false,'centripetal');
+ const samples=Math.max(16,points.length*10),verts=[],uv=[],idx=[];
+ for(let i=0;i<=samples;i++){
+  const t=i/samples,p=curve.getPoint(t),dir=curve.getTangent(t);
+  const r=Math.max(.001,Math.hypot(dir.x,dir.z)),ox=dir.z/r*width/2,oz=-dir.x/r*width/2;
+  const left=[p.x-ox,p.z-oz],right=[p.x+ox,p.z+oz];
+  verts.push(left[0],elevation(...left)+.19,left[1],right[0],elevation(...right)+.19,right[1]);
+  uv.push(0,t*points.length,1,t*points.length);
   if(i>0){const j=i*2;idx.push(j-2,j-1,j,j-1,j+1,j)}
  }
- const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vs,3));g.setIndex(idx);g.computeVertexNormals();
- const m=new THREE.Mesh(g,material);m.material.side=THREE.DoubleSide;m.receiveShadow=true;scene.add(m);return m;
+ const g=new THREE.BufferGeometry();
+ g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+ g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+ g.setIndex(idx);g.computeVertexNormals();
+ const m=new THREE.Mesh(g,material);m.material.side=THREE.DoubleSide;m.receiveShadow=true;scene.add(m);
+ return m;
 }
-// Roads and walking paths are stylized routes, not routing or access guidance.
-path([[105,248],[102,207],[65,170],[41,127],[41,77],[68,25],[91,-43],[112,-115]],13);
-path([[-90,226],[-75,173],[-73,134],[-83,101],[-98,62],[-99,-30],[-76,-96]],10);
-path([[-55,130],[-48,88],[-52,55],[-54,-68],[-56,-122]],7,M.walkway);
-path([[-98,57],[-63,56],[6,56],[73,63]],8,M.walkway);
-path([[34,-84],[64,-78],[96,-62],[138,-44]],8,M.walkway);
-path([[-142,-90],[-115,-72],[-75,-61],[11,-65],[78,-65]],6,M.walkway);
-path([[77,220],[133,211],[176,195],[209,169]],9);
-path([[-226,171],[-193,152],[-136,139],[-98,143]],8);
-path([[117,247],[170,240],[219,253]],8);
-path([[188,-229],[196,-130],[207,-20],[216,97],[226,234]],17);
+ROAD_PATHS.forEach(r=>path(r.points,r.width,M.asphalt));
+WALK_PATHS.forEach(r=>path(r.points,r.width,M.walkway));
+// Central sandy yard, the western baseball stadium and adjacent facilities.
+plane(scene,146,116,M.field,-5,.39,5);
+plane(scene,141,111,M.sand,-5,.43,5);
+plane(scene,144,13,M.walkway,-5,.46,-56);
+plane(scene,145,7,M.walkway,-5,.46,67);
+for(let q=-1;q<=1;q++)plane(scene,2,110,M.field,-5+q*53,.458,5);
+// North forecourt and south gym approach.
+plane(scene,90,36,M.walkway,-8,.32,-91);
+plane(scene,80,30,M.grass,-8,.36,-93);
+plane(scene,68,16,M.walkway,-8,.37,86);
+// Baseball field: a separate, broadly circular western outfield.
+const baseball=new THREE.Mesh(new THREE.CircleGeometry(67,72),M.turf);
+baseball.rotation.x=-Math.PI/2;baseball.position.set(-205,elevation(-205,105)+.24,105);scene.add(baseball);
+const diamond=new THREE.Mesh(new THREE.CircleGeometry(33,64),M.sand);
+diamond.rotation.x=-Math.PI/2;diamond.position.set(-205,elevation(-205,105)+.265,105);scene.add(diamond);
+const infield=new THREE.Mesh(new THREE.PlaneGeometry(31,31),M.field);
+infield.rotation.x=-Math.PI/2;infield.rotation.z=Math.PI/4;infield.position.set(-205,elevation(-205,105)+.285,105);scene.add(infield);
+const mound=new THREE.Mesh(new THREE.CircleGeometry(4,24),M.sand);
+mound.rotation.x=-Math.PI/2;mound.position.set(-205,elevation(-205,105)+.30,105);scene.add(mound);
+// Outfield boundary and compact western auxiliary buildings.
+for(let i=0;i<20;i++){
+ const t=.15+i/19*Math.PI*.9,x=-205-68*Math.cos(t),z=105-68*Math.sin(t);
+ cuboid(scene,1.5,1.5,1.5,M.dark,x,elevation(x,z)+.75,z,false);
+}
+const westAnnex=new THREE.Group();
+westAnnex.position.set(-246,elevation(-246,29),29);scene.add(westAnnex);
+cuboid(westAnnex,36,10,17,M.pale,0,5,0);
+cuboid(westAnnex,37,.8,18,M.roof,0,10.5,0);
+cuboid(westAnnex,13,6,9,M.glassBlue,26,3,-5);
+const westUtility=new THREE.Group();
+westUtility.position.set(-233,elevation(-233,-15),-15);scene.add(westUtility);
+cuboid(westUtility,21,7,13,M.white,0,3.5,0);
+cuboid(westUtility,22,.8,14,M.greenRoof,0,7.4,0);
+// Separate eastern girls' school recreation ground and adjoining school blocks.
+plane(scene,89,65,M.field,160,.34,25);
+plane(scene,84,61,M.sand,160,.375,25);
+const girlsSchool=new THREE.Group();
+girlsSchool.position.set(167,elevation(167,-114),-114);scene.add(girlsSchool);
+cuboid(girlsSchool,53,19,15,M.pale,0,9.5,0);
+cuboid(girlsSchool,54,.8,16,M.greenRoof,0,19.4,0);
+for(const [x,z,w,d,h] of [[-37,19,30,16,17],[1,28,45,15,20],[40,14,30,16,17]]){
+ cuboid(girlsSchool,w,h,d,M.pale,x,h/2,z);cuboid(girlsSchool,w+.5,.7,d+.5,M.greenRoof,x,h+.35,z);
+}
+// Eastern stairs/terraces by the girls' ground.
+for(let i=0;i<5;i++)cuboid(scene,71,.2,2.3,M.concrete,156,.38+i*.05,-16-i*5,false);
+// Parking off the southern east road.
+plane(scene,63,38,M.asphalt,119,.4,150);
+for(let i=0;i<7;i++)plane(scene,.5,15,M.line,95+i*7.5,.45,158);
+// A small south-east utility building next to the parking bays.
+const southAnnex=new THREE.Group();southAnnex.position.set(168,elevation(168,158),158);scene.add(southAnnex);
+cuboid(southAnnex,26,13,19,M.white,0,6.5,0);
+cuboid(southAnnex,26.5,1,19.5,M.greenRoof,0,13.5,0);
 
-// Central yard and athletics.
-plane(scene,136,110,M.field,-5,.4,5);
-plane(scene,132,106,M.sand,-5,.43,5);
-for(let q=-1;q<=1;q++){plane(scene,5,106,M.field,-5+q*40,.455,5)}
-plane(scene,154,20,M.walkway,-5,.42,-67);
-plane(scene,155,8,M.walkway,-5,.43,69);
-plane(scene,76,45,M.walkway,-16,.34,-97);
-plane(scene,66,39,M.grass,-16,.37,-96);
-plane(scene,75,18,M.walkway,102,.34,67);
-plane(scene,58,34,M.field,130,.36,67);
-// Baseball: lawn circle, infield and backstop suggest a dedicated western field.
-const diamond=new THREE.Mesh(new THREE.CircleGeometry(60,72),M.turf);
-diamond.rotation.x=-Math.PI/2;diamond.position.set(-158,.37,103);scene.add(diamond);
-const infield=new THREE.Mesh(new THREE.CircleGeometry(30,64),M.sand);
-infield.rotation.x=-Math.PI/2;infield.position.set(-158,.395,103);scene.add(infield);
-const baseSquare=new THREE.Mesh(new THREE.PlaneGeometry(28,28),M.field);
-baseSquare.rotation.x=-Math.PI/2;baseSquare.rotation.z=Math.PI/4;baseSquare.position.set(-158,.415,103);scene.add(baseSquare);
-const mound=new THREE.Mesh(new THREE.CircleGeometry(4,24),M.sand);mound.rotation.x=-Math.PI/2;mound.position.set(-158,.435,103);scene.add(mound);
-for(let i=0;i<10;i++){const t=i/9*Math.PI*.9+Math.PI*.05;const x=-158-61*Math.cos(t),z=103-61*Math.sin(t);
- cuboid(scene,2,1.8,2,M.dark,x,1.0,z,false)}
-// Tennis and outdoor courts.
-plane(scene,74,43,M.turf,138,.39,45);
-for(const x of [117,158]){plane(scene,.45,36,M.line,x,.47,45);plane(scene,34,.45,M.line,x+19,.47,45)}
-// Parking bays.
-plane(scene,70,43,M.asphalt,100,.37,129);
-for(let i=0;i<8;i++)plane(scene,.5,16,M.line,69+i*8.4,.4,139);
 // Mountain woodland and ornamental groves, using instancing for tablets.
 let rngSeed=91381;function rnd(){rngSeed=(rngSeed*1664525+1013904223)>>>0;return rngSeed/4294967296}
 const trunkGeo=new THREE.CylinderGeometry(.35,.55,1,5),leafGeo=new THREE.IcosahedronGeometry(1,0);
 const trees=[];
 function addTree(x,z,s){trees.push([x,z,s])}
-for(let i=0;i<980;i++){
- const x=(rnd()-.5)*545,z=(rnd()-.5)*490;
- const wood=z<-173 || x<-218 || (z<-138 && x<-67 && x<18 && rnd()<.36);
- if(!wood)continue;
- if(FACILITIES.some(b=>Math.hypot(x-b.x,z-b.z)<40))continue;
+for(let i=0;i<1370;i++){
+ const x=(rnd()-.5)*795,z=(rnd()-.5)*730;
+ const woodland=z<-176 || x<-284 || (z<-110&&x<-100&&rnd()<.6) || (x>212&&z<-70);
+ if(!woodland)continue;
+ if(FACILITIES.some(b=>Math.hypot(x-b.x,z-b.z)<46))continue;
+ if(ROAD_PATHS.some(r=>r.points.some((p,j)=>{
+  if(!j)return false;
+  const [ax,az]=r.points[j-1],[bx,bz]=p,dx=bx-ax,dz=bz-az;
+  const t=THREE.MathUtils.clamp(((x-ax)*dx+(z-az)*dz)/(dx*dx+dz*dz||1),0,1);
+  return Math.hypot(x-(ax+t*dx),z-(az+t*dz))<r.width/2+3;
+ })))continue;
  addTree(x,z,.68+rnd()*.9);
 }
-for(let i=0;i<120;i++){
- const x=-229+rnd()*105,z=-122+rnd()*205;
- if(Math.hypot(x+158,z-103)<73 || Math.hypot(x+8,z-12)<89)continue;
+for(let i=0;i<160;i++){
+ const x=-319+rnd()*130,z=-146+rnd()*335;
+ if(Math.hypot(x+205,z-105)<74 || Math.hypot(x+8,z-12)<89)continue;
  if(FACILITIES.some(b=>Math.hypot(x-b.x,z-b.z)<30))continue;
  addTree(x,z,.62+rnd()*.7);
 }
@@ -266,7 +318,7 @@ function createFacility(b){
  if(b.id==='dormNew'){
   plane(scene,73,20,M.walkway,b.x,.33,b.z+51);
  }
- b.group=group;b.collapsed=false;b.major=major;b.label=createLabel(b.name,b.x,b.parts[0].h+10,b.z,18);
+ b.group=group;b.collapsed=false;b.major=major;b.label=createLabel(b.name,b.x,elevation(b.x,b.z)+b.parts[0].h+10,b.z,18);
  facilityObjects.set(b.id,b);
 }
 function createLabel(text,x,y,z,scale=15){
@@ -281,9 +333,10 @@ function createLabel(text,x,y,z,scale=15){
 }
 FACILITIES.forEach(createFacility);
 const landmarkLabels=[
- createLabel('대운동장',-5,7,5,15),
- createLabel('야구장',-158,9,103,14),
- createLabel('북일랜드',-147,17,-77,12)
+ createLabel('대운동장',-5,8,5,15),
+ createLabel('야구장',-205,9,105,14),
+ createLabel('북일랜드',-32,9,185,12),
+ createLabel('북일여고 운동장',158,8,27,11)
 ];
 // User interactions.
 const facilityList=document.getElementById('facilities'),detail=document.getElementById('detail');
@@ -294,7 +347,7 @@ for(const b of allSites){
  const no=document.createElement('span');no.className='fno';no.textContent=b.no;
  const data=document.createElement('span');data.className='fdata';
  const title=document.createElement('b');title.textContent=b.name;
- const sub=document.createElement('span');sub.textContent=b.notes||({field:'대운동장',baseball:'서쪽 야구장',forest:'학교 숲'}[b.kind])||'교내 시설';
+ const sub=document.createElement('span');sub.textContent=b.notes||({field:'운동장',baseball:'서쪽 야구장',forest:'학교 녹지'}[b.kind])||'교내 시설';
  data.append(title,sub);el.append(no,data);
  el.addEventListener('click',()=>select(b,true));facilityList.append(el);
 }
@@ -378,7 +431,7 @@ function separateBuilding(b){
 function restore(){
  for(const o of debris){scene.remove(o.m);o.m.geometry=boxGeo}debris.length=0;
  FACILITIES.forEach(b=>{b.collapsed=false;b.group.visible=true;b.label.visible=labelsVisible});
- document.getElementById('status-title').textContent='주요 건물 7동 · 지형';
+ document.getElementById('status-title').textContent='주요 건물 7동 · 도로·지형';
  showNotice('전체 캠퍼스 복구 완료');
 }
 document.getElementById('restore').addEventListener('click',restore);
