@@ -15,14 +15,18 @@ export const FACILITIES = [
   parts:[{x:0,z:0,w:27,d:22,h:13}],notes:"창의관 북쪽의 소형 시설"},
  {id:"dormOld",no:"06",name:"여송학사 본관",type:"dorm",confidence:"중간",x:5,z:-320,focus:57,
   parts:[{x:-7,z:3,w:44,d:20,h:20},{x:14,z:-14,w:28,d:20,h:16,rot:-0.25}],notes:"가장 북쪽 숲 안쪽의 기숙사 본관"},
- {id:"dormNew",no:"07",name:"여송학사 신관",type:"dorm",confidence:"높음",x:151,z:210,focus:66,
+ {id:"dormNew",no:"07",name:"여송학사 신관",type:"dorm",confidence:"높음",x:151,z:210,focus:76,
+  // 2026 school aerial: long north connector + three unequal south wings.
+  // Central and western wings leave visible open courtyards, not a closed rectangle.
   parts:[
-   {x:-29,z:9,w:22,d:78,h:27},
-   {x:3,z:-24,w:72,d:22,h:27},
-   {x:39,z:3,w:22,d:65,h:26},
-   {x:-12,z:43,w:48,d:18,h:25},
-   {x:-22,z:-25,w:17,d:18,h:33}
-  ],notes:"남동쪽 경계 · 안뜰을 둘러싼 ㄷ자형 연결동과 출입부 높은 타워"}
+   {x:-34,z:17,w:21,d:77,h:26,detail:"westWing"},
+   {x:3,z:-24,w:85,d:21,h:27,detail:"crossbar"},
+   {x:0,z:22,w:21,d:62,h:28,detail:"middleWing"},
+   {x:39,z:4,w:22,d:57,h:26,detail:"eastWing"},
+   {x:41,z:-40,w:34,d:21,h:31,detail:"rearBlock"},
+   {x:-1,z:-27,w:16,d:19,h:35,detail:"clockTower"}
+  ],
+  notes:"붉은 벽돌·녹색 평지붕 · 가로 연결동과 여러 날개동 사이로 열린 안뜰, 시계탑"}
 ];
 export const LANDMARKS = [
  {id:"field",no:"08",name:"대운동장",x:-5,z:5,kind:"field",notes:"본관 남쪽의 큰 흙 운동장"},
