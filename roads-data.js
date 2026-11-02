@@ -1,4 +1,5 @@
-// Roads digitized as approximate control points from the user's purple-marked aerial image.
+// v0.4.4: Cleaned road centerlines from user's purple-marked satellite image.
+// Shared corridors are not painted twice; merged into one atlas surface at intersections.
 // Game coordinates are illustrative; routes are for visual modeling only.
 export const ROAD_PATHS = [
  {id:"west-spine",width:8.5,points:[[-84,-162],[-91,-139],[-95,-104],[-97,-53],[-98,-1],[-97,53],[-86,97],[-58,126],[-42,156],[-32,197],[-11,241],[14,275]]},
@@ -8,9 +9,7 @@ export const ROAD_PATHS = [
  {id:"north-east-loop",width:6.5,points:[[30,-218],[48,-227],[57,-245],[70,-256],[95,-252],[112,-237],[121,-207],[139,-188],[140,-155]]},
  {id:"west-baseball-access",width:7.5,points:[[-98,40],[-135,34],[-169,26],[-208,22],[-246,20],[-278,39],[-292,74]]},
  {id:"baseball-outer-loop",width:8,points:[[-292,74],[-307,115],[-307,157],[-295,191],[-270,217],[-235,231],[-190,231],[-153,225],[-118,214],[-99,193]]},
- {id:"baseball-return",width:6.5,points:[[-110,45],[-103,83],[-98,121],[-96,161],[-99,193],[-79,228],[-32,254]]},
- {id:"sports-south",width:7.5,points:[[-98,71],[-93,107],[-67,145],[-45,159],[-30,192],[-8,217],[26,242]]},
- {id:"southern-campus",width:8.5,points:[[-11,241],[13,275],[40,267],[69,253],[89,237],[91,212],[92,191],[90,170]]},
+ {id:"southern-campus",width:8.5,points:[[14,275],[40,267],[69,253],[89,237],[91,212],[92,191],[90,170]]},
  {id:"east-parking-access",width:6,points:[[89,109],[116,112],[137,123],[140,151],[117,165],[90,155],[89,109]]},
  {id:"gym-east-access",width:6,points:[[90,72],[73,94],[67,123],[77,154],[91,168]]},
  {id:"west-annex",width:5,points:[[-278,37],[-282,2],[-261,-20],[-223,-29],[-190,-24],[-174,0],[-169,26]]}
