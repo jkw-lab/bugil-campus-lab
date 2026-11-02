@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { FACILITIES, LANDMARKS, CAMERA_PRESETS } from './campus-data.js';
 import { ROAD_PATHS, WALK_PATHS, BOUNDARY } from './roads-data.js';
+import { buildMergedRoads } from './road-surface.js';
 import { elevation, heightColor, RELATIVE_HEIGHT_RANGE } from './terrain-model.js';
 
-// BUGIL CAMPUS LAB v0.4.3 — redesigned baseball, dorm and clear athletic field, not geospatial survey data.
+// BUGIL CAMPUS LAB v0.4.4 — redesigned baseball, dorm and clear athletic field, not geospatial survey data.
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfd4dc);
 scene.fog = new THREE.FogExp2(0xbfd4dc, 0.00115);
@@ -116,28 +117,8 @@ terrain.computeVertexNormals();
 const terrainMaterial=M.grass.clone();terrainMaterial.color.setHex(0xffffff);terrainMaterial.vertexColors=true;
 const land=new THREE.Mesh(terrain,terrainMaterial);
 land.receiveShadow=true;scene.add(land);
-// Piecewise Catmull-Rom surface ribbons follow the user-marked roads.
-function path(points,width,material=M.asphalt){
- if(points.length<2)return;
- const curve=new THREE.CatmullRomCurve3(points.map(([x,z])=>new THREE.Vector3(x,0,z)),false,'centripetal');
- const samples=Math.max(16,points.length*10),verts=[],uv=[],idx=[];
- for(let i=0;i<=samples;i++){
-  const t=i/samples,p=curve.getPoint(t),dir=curve.getTangent(t);
-  const r=Math.max(.001,Math.hypot(dir.x,dir.z)),ox=dir.z/r*width/2,oz=-dir.x/r*width/2;
-  const left=[p.x-ox,p.z-oz],right=[p.x+ox,p.z+oz];
-  verts.push(left[0],elevation(...left)+.48,left[1],right[0],elevation(...right)+.48,right[1]);
-  uv.push(0,t*points.length,1,t*points.length);
-  if(i>0){const j=i*2;idx.push(j-2,j-1,j,j-1,j+1,j)}
- }
- const g=new THREE.BufferGeometry();
- g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
- g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
- g.setIndex(idx);g.computeVertexNormals();
- const m=new THREE.Mesh(g,material);m.material.side=THREE.DoubleSide;m.receiveShadow=true;scene.add(m);
- return m;
-}
-ROAD_PATHS.forEach(r=>path(r.points,r.width,M.asphalt));
-WALK_PATHS.forEach(r=>path(r.points,r.width,M.walkway));
+// One texture-draped mesh replaces all overlapping separate road ribbons.
+scene.add(buildMergedRoads(terrain,mobile));
 // Central sandy yard, the western baseball stadium and adjacent facilities.
 plane(scene,146,116,M.field,-5,.39,5);
 plane(scene,141,111,M.sand,-5,.43,5);
@@ -308,6 +289,7 @@ for(const t of crowns){t.instanceMatrix.needsUpdate=true;scene.add(t);}
 const meshToFacility=new Map(),facilityObjects=new Map(),windowInstances=[],allLabels=[],debris=[];
 function facadeFor(b){
  if(b.id==='dormOld')return {wall:M.pale,roof:M.greenRoof,glass:M.glass};
+ if(b.id==='girlsDorm')return {wall:M.brick2,roof:M.greenRoof,glass:M.glass};
  if(b.id==='dormNew')return {wall:M.brick,roof:M.greenRoof,glass:M.glassDark};
  if(b.type==='gym')return {wall:M.pale,roof:M.stone,glass:M.glass};
  if(b.type==='modern')return {wall:M.pale,roof:M.greenRoof,glass:M.glassBlue};
@@ -438,6 +420,13 @@ function createFacility(b){
   }
   if(b.id==='gym')gymPhotoDetail(part,p);
   if(b.id==='dormNew')dormNewPhotoDetail(part,p);
+  if(b.id==='girlsDorm'){
+    // Separate girls' dorm, recognizable by its open ㄱ / L roof footprint.
+    putRoofBorder(part,p,M.whiteTrim);
+    cuboid(part,p.w-2,.55,p.d-2,M.greenRoof,0,p.h+1.2,0,false);
+    for(let xx=-p.w/2+5;xx<p.w/2-3;xx+=7)
+      cuboid(part,2.4,3,.22,M.glassDark,xx,7.0,p.d/2+.25,false);
+  }
   if(b.id==='dormOld') {
     putRoofBorder(part,p,M.roofTrim);
     cuboid(part,p.w*.72,p.h*.32,.25,M.glassBlue,0,p.h*.27,p.d/2+.2,false);
@@ -591,7 +580,7 @@ function separateBuilding(b){
 function restore(){
  for(const o of debris){scene.remove(o.m);o.m.geometry=boxGeo}debris.length=0;
  FACILITIES.forEach(b=>{b.collapsed=false;b.group.visible=true;b.label.visible=labelsVisible});
- document.getElementById('status-title').textContent='주요 건물 7동 · 지형 v0.4';
+ document.getElementById('status-title').textContent='주요 건물 8동 · 지형 v0.4';
  showNotice('전체 캠퍼스 복구 완료');
 }
 document.getElementById('restore').addEventListener('click',restore);
