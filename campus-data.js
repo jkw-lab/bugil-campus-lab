@@ -15,18 +15,24 @@ export const FACILITIES = [
   parts:[{x:0,z:0,w:27,d:22,h:13}],notes:"창의관 북쪽의 소형 시설"},
  {id:"dormOld",no:"06",name:"여송학사 본관",type:"dorm",confidence:"중간",x:5,z:-320,focus:57,
   parts:[{x:-7,z:3,w:44,d:20,h:20},{x:14,z:-14,w:28,d:20,h:16,rot:-0.25}],notes:"가장 북쪽 숲 안쪽의 기숙사 본관"},
- {id:"dormNew",no:"07",name:"여송학사 신관",type:"dorm",confidence:"높음",x:151,z:210,focus:76,
-  // 2026 school aerial: long north connector + three unequal south wings.
-  // Central and western wings leave visible open courtyards, not a closed rectangle.
+ {id:"dormNew",no:"07",name:"여송학사 신관",type:"dorm",confidence:"높음",x:151,z:210,focus:78,
+  // Satellite top-down: the connected north bar feeds three southward wings.
+  // Their two open courtyards give the complex its distinctive M-shaped silhouette.
   parts:[
-   {x:-34,z:17,w:21,d:77,h:26,detail:"westWing"},
-   {x:3,z:-24,w:85,d:21,h:27,detail:"crossbar"},
-   {x:0,z:22,w:21,d:62,h:28,detail:"middleWing"},
-   {x:39,z:4,w:22,d:57,h:26,detail:"eastWing"},
-   {x:41,z:-40,w:34,d:21,h:31,detail:"rearBlock"},
-   {x:-1,z:-27,w:16,d:19,h:35,detail:"clockTower"}
+   {x:0,z:-30,w:103,d:19,h:27,detail:"crossbar"},
+   {x:-41,z:8,w:20,d:70,h:27,detail:"westWing"},
+   {x:0,z:5,w:20,d:58,h:29,detail:"middleWing"},
+   {x:41,z:7,w:20,d:67,h:27,detail:"eastWing"},
+   {x:1,z:-31,w:16,d:18,h:36,detail:"clockTower"}
   ],
-  notes:"붉은 벽돌·녹색 평지붕 · 가로 연결동과 여러 날개동 사이로 열린 안뜰, 시계탑"}
+  notes:"위성사진 기준 M자형 평면 · 북측 연결동과 남쪽으로 뻗은 3개 날개, 열린 두 안뜰과 시계탑"},
+ {id:"girlsDorm",no:"여고",name:"여고 여송학사",type:"dorm",confidence:"중간",x:202,z:122,focus:58,
+  // Separate L/ㄱ footprint at the north-east side of the parking lot.
+  parts:[
+   {x:-15,z:-21,w:66,d:19,h:24,detail:"girlsHorizontal"},
+   {x:18,z:11,w:20,d:65,h:24,detail:"girlsVertical"}
+  ],
+  notes:"여고 운동장 남쪽의 ㄱ자형 별도 건물 · 위성사진 윤곽 기준"}
 ];
 export const LANDMARKS = [
  {id:"field",no:"08",name:"대운동장",x:-5,z:5,kind:"field",notes:"본관 남쪽의 큰 흙 운동장"},
