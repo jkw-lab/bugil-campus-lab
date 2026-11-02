@@ -24,7 +24,7 @@ export const FACILITIES = [
    {x:38,z:6,w:19,d:70,h:27,detail:"eastWing"},
    {x:0,z:11,w:18,d:18,h:36,detail:"clockTower"}
   ],
-  notes:"M자형 평면 · 외곽의 두 동과 안쪽으로 꺾인 두 연결동, 중앙 시계탑"}
+  notes:"M자형 평면 · 외곽의 두 동과 안쪽으로 꺾인 두 연결동, 중앙 시계탑"},
  {id:"girlsDorm",no:"여고",name:"여고 여송학사",type:"dorm",confidence:"중간",x:202,z:122,focus:58,
   // Separate L/ㄱ footprint at the north-east side of the parking lot.
   parts:[
