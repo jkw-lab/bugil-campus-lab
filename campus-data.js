@@ -15,17 +15,16 @@ export const FACILITIES = [
   parts:[{x:0,z:0,w:27,d:22,h:13}],notes:"창의관 북쪽의 소형 시설"},
  {id:"dormOld",no:"06",name:"여송학사 본관",type:"dorm",confidence:"중간",x:5,z:-320,focus:57,
   parts:[{x:-7,z:3,w:44,d:20,h:20},{x:14,z:-14,w:28,d:20,h:16,rot:-0.25}],notes:"가장 북쪽 숲 안쪽의 기숙사 본관"},
- {id:"dormNew",no:"07",name:"여송학사 신관",type:"dorm",confidence:"높음",x:151,z:210,focus:78,
-  // Satellite top-down: the connected north bar feeds three southward wings.
-  // Their two open courtyards give the complex its distinctive M-shaped silhouette.
+ {id:"dormNew",no:"07",name:"여송학사 신관",type:"dorm",confidence:"높음",x:151,z:210,focus:80,
+  // Literal M outline in the overhead plan: two tall outer wings and two slanted interior links.
   parts:[
-   {x:0,z:-30,w:103,d:19,h:27,detail:"crossbar"},
-   {x:-41,z:8,w:20,d:70,h:27,detail:"westWing"},
-   {x:0,z:5,w:20,d:58,h:29,detail:"middleWing"},
-   {x:41,z:7,w:20,d:67,h:27,detail:"eastWing"},
-   {x:1,z:-31,w:16,d:18,h:36,detail:"clockTower"}
+   {x:-38,z:6,w:19,d:72,h:27,detail:"westWing"},
+   {x:-19,z:-12,w:19,d:58,h:26,rot:0.72,detail:"leftDiagonal"},
+   {x:19,z:-12,w:19,d:58,h:27,rot:-0.72,detail:"rightDiagonal"},
+   {x:38,z:6,w:19,d:70,h:27,detail:"eastWing"},
+   {x:0,z:11,w:18,d:18,h:36,detail:"clockTower"}
   ],
-  notes:"위성사진 기준 M자형 평면 · 북측 연결동과 남쪽으로 뻗은 3개 날개, 열린 두 안뜰과 시계탑"},
+  notes:"M자형 평면 · 외곽의 두 동과 안쪽으로 꺾인 두 연결동, 중앙 시계탑"}
  {id:"girlsDorm",no:"여고",name:"여고 여송학사",type:"dorm",confidence:"중간",x:202,z:122,focus:58,
   // Separate L/ㄱ footprint at the north-east side of the parking lot.
   parts:[
