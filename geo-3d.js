@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { loadGeographicElevation } from './geo-dem.js';
+import { createProvisionalSchoolFootprints } from './geo-missing-buildings.js';
 
 // Geographic 3D prototype: genuine OSM footprint geometry, not an indoor or survey model.
 // Game-local coordinates are never mixed with WGS84 in this preview.
@@ -57,6 +59,34 @@ const pitchMat=new THREE.MeshStandardMaterial({color:0x92ab79,roughness:1,side:T
 const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
 const drawnMeshes=[];
 let currentData=null;
+let dem=null;
+let manualCount=0;
+const provisionalLabels=new THREE.Group();scene.add(provisionalLabels);
+const mapMarkers=[];
+const terrainHeight=(x,z)=>dem?dem.elevation(x,z):0;
+function applyRealTerrain(){
+ if(!dem)return;
+ const geometry=new THREE.PlaneGeometry(1800,1800,100,100);
+ geometry.rotateX(-Math.PI/2);
+ const pos=geometry.getAttribute('position');
+ const colors=[];
+ const low=new THREE.Color('#5e936f'),high=new THREE.Color('#b6ad7f');
+ const c=new THREE.Color();
+ for(let i=0;i<pos.count;i++){
+  const y=terrainHeight(pos.getX(i),pos.getZ(i));
+  pos.setY(i,y-.08);
+  c.copy(low).lerp(high,THREE.MathUtils.clamp((y+20)/105,0,1));
+  colors.push(c.r,c.g,c.b);
+ }
+ pos.needsUpdate=true;
+ geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+ geometry.computeVertexNormals();
+ ground.geometry.dispose();ground.geometry=geometry;
+ ground.material.dispose();
+ ground.material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
+ grid.visible=false;
+ for(const m of mapMarkers){m.base.position.y=terrainHeight(m.x,m.z)+1;m.sprite.position.y=terrainHeight(m.x,m.z)+24;}
+}
 function toWorld(pair){
  return [(pair[0]-ORIGIN.lon)*X_M,(ORIGIN.lat-pair[1])*Z_M];
 }
@@ -85,6 +115,7 @@ function polygons(geo) {
   return [];
 }
 function heightInfo(props) {
+ if(props.localModel)return {height:props.visualHeightMetres||15,known:false,label:'사진 기반 임시 건물 높이'};
  const h=Number.parseFloat(String(props.height??''));
  if(Number.isFinite(h)&&h>=2&&h<=120)return {height:h,known:true,label:'공개 높이 태그'};
  const levels=Number.parseFloat(String(props.levels??props['building:levels']??''));
@@ -110,7 +141,9 @@ function makeBuilding(f) {
      geo.rotateX(-Math.PI/2);
    }catch(e){continue;}
    const hash=String(f.id||f.properties?.name||'x').split('').reduce((n,ch)=>((n*31)+ch.charCodeAt(0))>>>0,0);
-   const mesh=new THREE.Mesh(geo,[roofMaterial,walls[hash%walls.length]]);
+   const mat=(f.properties||{}).localModel?new THREE.MeshStandardMaterial({color:0xc4b8a3,roughness:.86}):walls[hash%walls.length];
+   const mesh=new THREE.Mesh(geo,[roofMaterial,mat]);
+   mesh.position.y=terrainHeight(...parsed.centroid);
    mesh.userData={properties:f.properties||{},height:info,id:f.id||'',centroid:parsed.centroid};
    mesh.castShadow=false;mesh.receiveShadow=true;
    buildings.add(mesh);drawnMeshes.push(mesh);n++;
