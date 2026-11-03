@@ -112,7 +112,7 @@ export function mergeGeodataBuildings(osmFeatures,officialFeatures){
  }
  return {
   records:rendered,
-  osmOriginal:original.length,osmRetained:original.length-removed.length,
+  osmOriginal:original.length,osmRetained:rendered.filter(x=>x.source==="OpenStreetMap").length,
   officialAdded:selected.length,removed,
   officialMissing:OFFICIAL_ADDITIONS.filter(t=>!selected.some(s=>s.spec.id===t.id)).map(t=>t.id),
   lockedSourceChanges,
