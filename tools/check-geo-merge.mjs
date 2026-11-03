@@ -44,7 +44,7 @@ const merged=mergeGeodataBuildings(osm.features,official);
 assert(merged.officialAdded===3,'Three new classrooms were not obtained');
 assert(merged.officialMissing.length===0,'Official IDs missing');
 assert(merged.lockedSourceChanges.length===0,'A confirmed footprint changed in the source');
-assert(CONFIRMED_FOOTPRINTS.length===5,'Expected five user-confirmed footprints');
+assert(CONFIRMED_FOOTPRINTS.length===7,'Expected seven user-confirmed footprints');
 for(const entry of CONFIRMED_FOOTPRINTS){
  const record=merged.records.find(r=>r.id===entry.id);
  assert(record,'User-confirmed footprint missing from rendered set: '+entry.id);
@@ -60,6 +60,14 @@ edited.geometry.coordinates[0][0][0]+=0.00001;
 const untrusted=mergeGeodataBuildings(mutated,official);
 assert(untrusted.lockedSourceChanges.some(x=>x.id==='way/494724468'),'Changed footprint was not detected');
 assert(!untrusted.records.some(x=>x.id==='way/494724468'),'Changed footprint was silently displayed');
+// Newly locked Yeseong main dorm must also reject silent outline changes.
+const changedDorm=JSON.parse(JSON.stringify(osm.features));
+const mainDorm=changedDorm.find(f=>f.id==='way/487459956');
+assert(!!mainDorm,'Yeseong main dorm GIS polygon missing');
+mainDorm.geometry.coordinates[0][0][0]+=0.00001;
+const dormDrift=mergeGeodataBuildings(changedDorm,official);
+assert(dormDrift.lockedSourceChanges.some(x=>x.id==='way/487459956'),'Yeseong dorm geometry drift not detected');
+assert(!dormDrift.records.some(x=>x.id==='way/487459956'),'Altered dorm footprint silently displayed');
 // Official source changes must also be rejected without fabricating another model.
 const mutatedGov=JSON.parse(JSON.stringify(official));
 const school=mutatedGov.find(f=>String(f.properties?.objectid??f.properties?.OBJECTID)==='9248057');
@@ -68,6 +76,13 @@ school.geometry.coordinates[0][0][0]+=0.00001;
 const changedGov=mergeGeodataBuildings(osm.features,mutatedGov);
 assert(changedGov.lockedSourceChanges.some(x=>x.id==='9248057'),'Modified official outline not detected');
 assert(!changedGov.records.some(x=>x.id==='9248057'),'Modified official outline displayed');
+const changedGirls=JSON.parse(JSON.stringify(official));
+const firstSchool=changedGirls.find(f=>String(f.properties?.objectid??f.properties?.OBJECTID)==='9248086');
+assert(!!firstSchool,'Girls school first official polygon missing');
+firstSchool.geometry.coordinates[0][0][0]+=0.00001;
+const girlsDrift=mergeGeodataBuildings(osm.features,changedGirls);
+assert(girlsDrift.lockedSourceChanges.some(x=>x.id==='9248086'),'Girls school geometry drift not detected');
+assert(!girlsDrift.records.some(x=>x.id==='9248086'),'Altered girls school polygon silently displayed');
 for(const id of OFFICIAL_ADDITIONS.map(x=>x.id))assert(merged.records.some(x=>x.id===id),'Missing added '+id);
 for(const d of OSM_PRESERVE){
  assert(merged.preserved.find(x=>x.id===d.id)?.available,'Protected OSM map missing '+d.id);
