@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { loadGeographicElevation } from './geo-dem.js';
-import { mergeGeodataBuildings, OFFICIAL_ADDITIONS, OSM_PRESERVE } from './geo-building-merge.js';
+import { mergeGeodataBuildings, OFFICIAL_ADDITIONS, OSM_PRESERVE, confirmedGeometryStatus } from './geo-building-merge.js';
 
 /**
  * GIS MERGE (v0.4.9)
@@ -242,7 +242,7 @@ function showBuilding(r){
   '지상 층수: '+(floors??'자료 미등록'),
   '실제 높이(m): 미확보 · 임의 추정값 사용하지 않음',
   '건물 윤곽: 실제 공개 지리정보 좌표',
-  r.id.startsWith('way/')?'시설명 연결은 기존 프로젝트에서의 잠정 분류임':'건물 공식 명칭·용도는 원본 속성을 우선함'
+  confirmedGeometryStatus(r.id,f.geometry)==='confirmed'?'위치·평면 윤곽: 사용자 검증 완료 · 변경 보호됨':r.id.startsWith('way/')?'건물명 대응: 추가 검증 필요':'원본 건물명과 시설명 대응: 추가 검증 필요'
  ];
  $('detail').textContent=lines.join('\n');
  $('detail').style.whiteSpace='pre-line';
@@ -253,13 +253,14 @@ function renderBuildings(selection){
  let drawn=0;
  for(const record of selection.records)drawn+=addBuilding(record);
  for(const record of selection.records)if(record.label&&idToSurface.has(record.id))labelBuilding(record);
- $('status').textContent='OSM 원본 '+selection.osmRetained+'개 + 공식 교사동 '+selection.officialAdded+'개 · 도로 '+roadsGroup.children.length+'개';
+ $('status').textContent='OSM '+selection.osmRetained+'개 + 공식 교사동 '+selection.officialAdded+'개 · 윤곽 확정 '+selection.confirmed.filter(x=>x.available).length+'동 · 도로 '+roadsGroup.children.length+'개';
  $('source').textContent='건물: 기존 OSM 윤곽 우선 + 공식 교사동 3개 선택 · 도로: OSM 원본 중심선';
  $('height-note').textContent='건물의 실측 높이 부재: 위치·윤곽만 3D 지형에 투영하며, 임의 층고로 벽·지붕을 만들지 않음';
  const missing=selection.officialMissing;
- $('gov-note').textContent=missing.length?
-  '공식 교사동 미확보 ID: '+missing.join(', ')+' (OSM 건물은 계속 표시됨)':
-  '공식 교사동 3개 연결됨 · OSM 중복 '+selection.removed.length+'개 제거 · 기존 기숙사·체육관 폴리곤 유지';
+ $('gov-note').textContent=selection.lockedSourceChanges.length?
+  '주의: 확정된 건물 윤곽의 원본 좌표가 변경되어 표시를 중단함 — '+selection.lockedSourceChanges.map(x=>x.id).join(', '):
+  missing.length?'공식 교사동 미확보 ID: '+missing.join(', ')+' (OSM 건물은 계속 표시됨)':
+  '공식 교사동 3개 연결됨 · OSM 중복 '+selection.removed.length+'개 제거 · 확인된 5개 건물 윤곽 잠금';
  for(const t of TARGETS){
   const el=$(t.id);if(!el)continue;
   el.disabled=!idToSurface.has(t.id);

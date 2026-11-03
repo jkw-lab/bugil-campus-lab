@@ -4,7 +4,8 @@
   "osmRetained": 130,
   "officialAdded": 3,
   "osmOverlappingReplaced": 0,
-  "preservedOsmFootprints": 4,
+  "preservedOsmFootprints": 5,
+  "confirmedFootprints": 5,
   "roads": 237,
   "selectedOfficialIds": [
     "9248057",
@@ -15,7 +16,15 @@
     "way/487459954",
     "way/487459955",
     "way/487459956",
-    "way/494469121"
+    "way/494469121",
+    "way/494724468"
   ],
-  "sourceGeometryStored": false
+  "sourceGeometryStored": false,
+  "geometryFingerprints": {
+    "9248057": "49c6d843",
+    "way/487459954": "d3d3fbf2",
+    "way/487459955": "715d6934",
+    "way/494469121": "424d5dea",
+    "way/494724468": "38c4ebb4"
+  }
 }
