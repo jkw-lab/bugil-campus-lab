@@ -159,9 +159,12 @@ function makeLand(f) {
    try{
     const geo=new THREE.ShapeGeometry(parsed.shape);
     geo.rotateX(-Math.PI/2);
+    const attrs=geo.getAttribute('position');
+    for(let i=0;i<attrs.count;i++) attrs.setY(i,terrainHeight(attrs.getX(i),attrs.getZ(i))+.18);
+    attrs.needsUpdate=true;geo.computeVertexNormals();
     const p=f.properties||{};
     const mat=p.landuse==='forest'?forestMat:p.leisure==='pitch'?pitchMat:grassMat;
-    const mesh=new THREE.Mesh(geo,mat);mesh.position.y=.015;land.add(mesh);
+    const mesh=new THREE.Mesh(geo,mat);land.add(mesh);
    }catch(e){}
  }
 }
@@ -177,13 +180,21 @@ function makeRoad(f) {
    const points=coll.filter(validCoord).map(toWorld);
    const verts=[];
    for(let i=1;i<points.length;i++){
-     const [x1,z1]=points[i-1],[x2,z2]=points[i];
-     if(!nearWorld((x1+x2)/2,(z1+z2)/2))continue;
-     const len=Math.hypot(x2-x1,z2-z1);
+     const [ax,az]=points[i-1],[bx,bz]=points[i];
+     if(!nearWorld((ax+bx)/2,(az+bz)/2))continue;
+     const len=Math.hypot(bx-ax,bz-az);
      if(len<.1)continue;
-     const ox=(z2-z1)/len*width/2,oz=-(x2-x1)/len*width/2;
-     const p1=[x1+ox,.06,z1+oz],p2=[x1-ox,.06,z1-oz],p3=[x2+ox,.06,z2+oz],p4=[x2-ox,.06,z2-oz];
-     verts.push(...p1,...p2,...p3,...p2,...p4,...p3);
+     const segments=Math.max(1,Math.ceil(len/13));
+     const ox=(bz-az)/len*width/2,oz=-(bx-ax)/len*width/2;
+     for(let j=0;j<segments;j++){
+       const t0=j/segments,t1=(j+1)/segments;
+       const x1=ax+(bx-ax)*t0,z1=az+(bz-az)*t0;
+       const x2=ax+(bx-ax)*t1,z2=az+(bz-az)*t1;
+       const q=(x,z)=>[x,terrainHeight(x,z)+.24,z];
+       const p1=q(x1+ox,z1+oz),p2=q(x1-ox,z1-oz);
+       const p3=q(x2+ox,z2+oz),p4=q(x2-ox,z2-oz);
+       verts.push(...p1,...p2,...p3,...p2,...p4,...p3);
+     }
    }
    if(verts.length===0)continue;
    const geo=new THREE.BufferGeometry();
@@ -204,6 +215,7 @@ function createMarker(label,lon,lat,color) {
  const tex=new THREE.CanvasTexture(c);
  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
  sprite.scale.set(64,13.6,1);sprite.position.set(x,23,z);scene.add(sprite);
+ mapMarkers.push({base,sprite,x,z});
 }
 createMarker('북일고 지도 대표점',127.15817,36.83224,0xf8b863);
 createMarker('북일여고 지도 대표점',127.16009,36.83162,0x64c6cf);
