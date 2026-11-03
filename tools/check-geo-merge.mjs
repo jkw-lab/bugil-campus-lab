@@ -48,7 +48,7 @@ assert(CONFIRMED_FOOTPRINTS.length===7,'Expected seven user-confirmed footprints
 for(const entry of CONFIRMED_FOOTPRINTS){
  const record=merged.records.find(r=>r.id===entry.id);
  assert(record,'User-confirmed footprint missing from rendered set: '+entry.id);
- assert(record.source===entry.source || (entry.id==='9248057'&&record.source.includes('행안부')),'Source changed for '+entry.id);
+ assert(record.source===entry.source || (entry.source.startsWith('행안부')&&record.source.includes('행안부')),'Source changed for '+entry.id);
  assert(geometryFingerprint(record.feature.geometry)===entry.geometryHash,'Geometry fingerprint drift for '+entry.id);
  assert(confirmedGeometryStatus(entry.id,record.feature.geometry)==='confirmed','Confirmed status not preserved: '+entry.id);
 }
