@@ -63,5 +63,6 @@ export const CAMERA_PRESETS = {
  campus:{position:[-282,322,351],target:[-10,3,-22]},
  main:{position:[-126,92,-40],target:[-6,12,-142]},
  field:{position:[-35,195,198],target:[-5,0,5]},
- dorm:{position:[277,162,295],target:[166,10,220]}
+ dorm:{position:[277,162,295],target:[166,10,220]},
+ girls:{position:[357,162,72],target:[240,14,-79]}
 };
