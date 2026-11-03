@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101820">
+<meta name="description" content="BUGIL CAMPUS LAB: 공개 사진 자료로 재구성한 북일고 3D 캠퍼스 시제품.">
+<title>BUGIL CAMPUS LAB · 이전 사진 기반 게임</title>
+<link rel="stylesheet" href="./styles.css">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<div id="world"></div>
+<div class="topbar">
+  <div class="brand"><div class="kicker">BUGIL · CAMPUS LAB</div><h1>기존 사진 기반 시제품</h1><small>LEGACY MODEL · 위치·크기·도로폭 미검증</small></div>
+  <div class="topright" id="views"><button data-view="campus" class="active">전체</button><button data-view="main">본관</button><button data-view="field">운동장</button><button data-view="dorm">기숙사</button></div>
+</div>
+<div class="panel"><p style="padding:10px 14px;color:#ffb976;font-size:12px">이전 버전 기록용입니다. 실제 지리정보 기반 모델이 아니므로 건물·도로 위치가 정확하지 않을 수 있습니다.</p>
+  <div class="panelhead"><div class="mini">CAMPUS INDEX</div><h2>건물과 시설</h2><p>북일여고 A·B 교사동을 새로 추가했습니다. 두 건물의 위치와 윤곽은 검증 전 임시값입니다.</p><button id="girls-focus" style="margin-top:7px;width:100%;border:1px solid #ff9c4270;border-radius:8px;background:#ff9c421a;color:#fdd7ad;padding:8px;font-size:11px;font-weight:700">북일여고 본관 2개 동 보기</button></div>
+  <div style="padding:9px 14px;font-size:11px;line-height:1.7;border-bottom:1px solid #ffffff24"><span style="font-size:9px;color:#acc0cb">© <a href="https://www.openstreetmap.org/copyright" style="color:#aec4cc;text-decoration:underline">OpenStreetMap contributors (ODbL)</a></span><br><a href="./geo-3d.html" style="color:#ffd29b;text-decoration:none;font-weight:700">공개지도 기반 3D 모델 보기 ↗</a><br><a href="./verification.html" style="color:#bfd6df;text-decoration:none">기존 건물·도로 검증 지도 ↗</a></div>
+  <div class="facilitylist" id="facilities"></div>
+  <div class="detail" id="detail">건물 이름을 누르면 해당 장소로 이동합니다.</div>
+</div>
+<div class="status"><div>모델링 진행 상태</div><b id="status-title">주요 건물 10동 · 배치 v0.4.7</b><div id="status-sub">등고선 기반 추정 고도 · 기준점 임시 정렬</div></div>
+<div class="notice" id="notice"></div>
+<div class="footnote">고도 기준점 정렬은 잠정값 · 건물 및 운동장 높이는 현장 측량값 아님</div>
+<div class="bottombar">
+  <button class="tool active" id="inspect" aria-pressed="true"><span>⌖</span><b>건물 탐색</b></button>
+  <button class="tool" id="detail-view"><span>▤</span><b>고도 보기</b></button>
+  <button class="tool" id="labels"><span>▤</span><b>이름 표시</b></button>
+  <button class="tool" id="geo-overlay" aria-pressed="false"><span>⌗</span><b>지도 윤곽</b></button>
+  <button class="tool" id="compare"><span>◈</span><b>위에서 보기</b></button>
+  <button class="tool" id="collapse"><span>▧</span><b>블록 분리</b></button>
+  <button class="tool" id="restore"><span>↺</span><b>복구</b></button>
+</div>
+<div class="loading" id="loading"><div><b>BUGIL CAMPUS LAB</b><p>3D 캠퍼스를 구성하고 있습니다…</p></div></div>
+<script>
+window.addEventListener("error",function(e){const el=document.getElementById("loading");if(el){el.innerHTML="<div><b>3D 화면을 불러오지 못했습니다.</b><p>네트워크 연결과 Safari의 WebGL 지원 여부를 확인해 주세요.</p></div>";}},true);
+setTimeout(function(){const el=document.getElementById("loading");if(el)el.innerHTML="<div><b>3D 라이브러리 연결 지연</b><p>페이지를 새로고침해 주세요.</p></div>"},20000);
+</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
