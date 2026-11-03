@@ -43,7 +43,7 @@ scene.add(new THREE.HemisphereLight(0xffffff,0x536a67,2.2));
 const sun=new THREE.DirectionalLight(0xfff5dd,1.55);sun.position.set(-240,450,-155);scene.add(sun);
 const terrainMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
 const terrain=new THREE.Mesh(new THREE.PlaneGeometry(1800,1800,1,1),terrainMaterial);
-terrain.rotation.x=-Math.PI/2;scene.add(terrain);
+terrain.rotation.x=-Math.PI/2;terrain.visible=false;scene.add(terrain);
 const featuresGroup=new THREE.Group(),roadsGroup=new THREE.Group(),landGroup=new THREE.Group();
 scene.add(landGroup,roadsGroup,featuresGroup);
 const buildingFill=new THREE.MeshBasicMaterial({color:0x92d9e2,transparent:true,opacity:.45,side:THREE.DoubleSide,depthWrite:false});
@@ -108,7 +108,7 @@ function featureId(f){
 }
 function officialLabel(f){
  const p=f.properties||{};
- const name=[p.building_name,p.buld_nm_dc].filter(Boolean).join(' · ').trim();
+ const name=[p.building_name||p.name,p.buld_nm_dc].filter(Boolean).join(' · ').trim();
  return name||'건물명 미등록';
 }
 function addBuilding(f,source){
@@ -180,7 +180,7 @@ function setTerrain(){
  a.needsUpdate=true;geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
  geo.computeVertexNormals();
  terrain.geometry.dispose();terrain.geometry=geo;
- terrain.rotation.x=0;terrain.position.y=0;
+ terrain.rotation.x=0;terrain.position.y=0;terrain.visible=true;
 }
 async function loadGov(){
  // The third-party service is licensed for online visualisation; do not
