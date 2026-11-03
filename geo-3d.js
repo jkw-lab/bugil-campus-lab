@@ -260,7 +260,7 @@ function renderBuildings(selection){
  $('gov-note').textContent=selection.lockedSourceChanges.length?
   '주의: 확정된 건물 윤곽의 원본 좌표가 변경되어 표시를 중단함 — '+selection.lockedSourceChanges.map(x=>x.id).join(', '):
   missing.length?'공식 교사동 미확보 ID: '+missing.join(', ')+' (OSM 건물은 계속 표시됨)':
-  '공식 교사동 3개 연결됨 · OSM 중복 '+selection.removed.length+'개 제거 · 확인된 5개 건물 윤곽 잠금';
+  '공식 교사동 3개 연결됨 · OSM 중복 '+selection.removed.length+'개 제거 · 확인된 '+selection.confirmed.filter(x=>x.available).length+'개 건물 윤곽 잠금';
  for(const t of TARGETS){
   const el=$(t.id);if(!el)continue;
   el.disabled=!idToSurface.has(t.id);

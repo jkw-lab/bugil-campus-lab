@@ -5,13 +5,13 @@ const ORIGIN_LAT=36.8315,ORIGIN_LON=127.1585;
 const M_LON=111320*Math.cos(ORIGIN_LAT*Math.PI/180),M_LAT=111133;
 export const OFFICIAL_ADDITIONS=[
  {id:"9248057",label:"북일고 본관 (위치·윤곽 확인)",note:"사용자가 형태·위치 확인함. 공식 원본에는 '본관' 명칭 미기재"},
- {id:"9248086",label:"북일여고 제1교",note:"정부 건물 도형 제1교"},
+ {id:"9248086",label:"북일여고 제1교 (위치·윤곽 확인)",note:"사용자 확인 완료 · 정부 건물 도형 제1교"},
  {id:"9248104",label:"북일여고 제2교",note:"정부 건물 도형 제2교"}
 ];
 export const OSM_PRESERVE=[
- {id:"way/487459954",label:"여송학사 신관 (OSM 명칭 연결 잠정)"},
- {id:"way/487459955",label:"여고 여송학사 (OSM 명칭 연결 잠정)"},
- {id:"way/487459956",label:"여송학사 본관 (OSM 명칭 연결 잠정)"},
+ {id:"way/487459954",label:"여송학사 신관 (위치·윤곽 확인)"},
+ {id:"way/487459955",label:"여고 여송학사 (위치·윤곽 확인)"},
+ {id:"way/487459956",label:"여송학사 본관 (위치·윤곽 확인)"},
  {id:"way/494469121",label:"현암관 (위치·윤곽 확인)"},
  {id:"way/494724468",label:"아단관 (위치·윤곽 확인)"}
 ];
@@ -21,9 +21,11 @@ export const OSM_PRESERVE=[
 export const CONFIRMED_FOOTPRINTS=[
  {id:"way/487459954",name:"여송학사 신관",source:"OpenStreetMap",geometryHash:"d3d3fbf2"},
  {id:"way/487459955",name:"여고 여송학사",source:"OpenStreetMap",geometryHash:"715d6934"},
+ {id:"way/487459956",name:"여송학사 본관",source:"OpenStreetMap",geometryHash:"fca6b34c"},
  {id:"way/494469121",name:"현암관",source:"OpenStreetMap",geometryHash:"424d5dea"},
  {id:"way/494724468",name:"아단관",source:"OpenStreetMap",geometryHash:"38c4ebb4"},
- {id:"9248057",name:"북일고 본관",source:"행안부 원천 / Esri 실시간",geometryHash:"49c6d843"}
+ {id:"9248057",name:"북일고 본관",source:"행안부 원천 / Esri 실시간",geometryHash:"49c6d843"},
+ {id:"9248086",name:"북일여고 제1교",source:"행안부 원천 / Esri 실시간",geometryHash:"800646e1"}
 ];
 const confirmedById=new Map(CONFIRMED_FOOTPRINTS.map(x=>[x.id,x]));
 export function geometryFingerprint(geometry){
