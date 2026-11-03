@@ -1,0 +1,22 @@
+name: Validate GIS-only school geometry merge
+on:
+  push:
+    branches:
+      - feat/geo-merge-osm-preserved-v049
+    paths:
+      - '.github/workflows/check-geo-merge.yml'
+      - 'geo-building-merge.js'
+      - 'tools/check-geo-merge.mjs'
+permissions:
+  contents: read
+jobs:
+  source-preservation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate OSM and official records without storing GIS source geometry
+        run: node tools/check-geo-merge.mjs
