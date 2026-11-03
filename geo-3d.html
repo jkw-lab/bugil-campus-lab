@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c1b22">
+<title>북일고 · 공개 지리정보 기반 3D 실험</title>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<style>
+:root{font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;background:#13252e;color:#f3f7f6}
+*{box-sizing:border-box}body{margin:0;overflow:hidden}button,a{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible{outline:2px solid #f6c985;outline-offset:3px}
+#scene{position:fixed;inset:0}#scene canvas{display:block;touch-action:none}
+nav{position:absolute;top:max(10px,env(safe-area-inset-top));left:12px;right:12px;display:flex;justify-content:space-between;gap:12px;pointer-events:none;align-items:flex-start}
+.brand,.actions{background:#0b1824e9;border:1px solid #60758069;border-radius:14px;padding:13px 15px;backdrop-filter:blur(15px);pointer-events:auto}
+.brand strong{font-size:17px;letter-spacing:-.03em}.brand span{display:block;color:#a5b9c4;font-size:10px;margin-top:4px}
+.actions{display:flex;gap:6px;align-items:center}.actions button,.actions a{border:1px solid #ffffff33;border-radius:8px;color:#f0f5f6;background:#ffffff08;padding:9px 11px;text-decoration:none;font-size:11px}
+.actions button:hover,.actions a:hover{background:#ffffff20}
+aside{position:absolute;top:105px;left:12px;width:280px;max-height:calc(100dvh - 180px);overflow:auto;border-radius:14px;padding:16px;background:#0b1824e9;border:1px solid #60758069;backdrop-filter:blur(15px)}
+aside h2{font-size:13px;margin:0 0 9px}aside p{font-size:11px;line-height:1.6;color:#b4cbd4;margin:6px 0 10px}
+#status{font-size:12px;color:#f7d19c;font-weight:700;line-height:1.5}#building{padding:10px 0;border-top:1px solid #3d4b52;font-size:11px;line-height:1.65;color:#dbe7e7}
+#building b{font-size:12px}.warnings{color:#f3cba2;font-size:10px;line-height:1.5}
+#retry{width:100%;border:1px solid #e8b86f;border-radius:8px;background:#e5ae60;color:#15232e;padding:9px;font-weight:700;font-size:11px;margin:9px 0}
+footer{position:absolute;left:12px;bottom:max(10px,env(safe-area-inset-bottom));max-width:560px;background:#0b1824e8;padding:9px 12px;border-radius:9px;font-size:10px;line-height:1.5;color:#bbccd2;pointer-events:none}
+@media(max-width:700px){.brand{padding:10px 12px}.brand strong{font-size:13px}.brand span{font-size:9px}.actions{padding:5px;gap:3px}.actions button,.actions a{padding:8px;font-size:9px}aside{top:86px;width:min(250px,58vw);padding:11px;max-height:calc(100dvh - 175px)}footer{max-width:calc(100% - 24px)}}
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<nav>
+  <div class="brand"><strong>BUGIL · GEO 3D</strong><span>실제 공개지도 외곽선 기반 실험 모델</span></div>
+  <div class="actions"><button id="top">위에서 보기</button><button id="isometric">입체 보기</button><a href="./index.html">기존 게임</a></div>
+</nav>
+<aside>
+  <h2>공개 공간정보로 생성한 건물</h2>
+  <div id="status" role="status">OpenStreetMap 건물 정보를 불러오는 중…</div>
+  <p>가져온 건물의 <b>실제 지도상 평면 윤곽</b>을 입체화해. 건물 이름과 층수가 공개 데이터에 없으면 임의로 붙이지 않아.</p>
+  <button id="retry" hidden>지도 다시 불러오기</button>
+  <div id="building">건물을 탭하면 공개 데이터 속성을 확인할 수 있어.</div>
+  <p class="warnings">학교 건물로 확정된 모델이 아니야. 주변 건물이 함께 표시될 수 있고, 건물 높이·지형·외관은 검증되지 않은 임시 표현이야.</p>
+</aside>
+<footer>실제 지도 좌표계 WGS84 · 북쪽 ↑ · 3D 건물 높이 임시값 포함 · © OpenStreetMap contributors (ODbL) · 보안·출입·실내 정보 없음</footer>
+<script type="module" src="./geo-3d.js"></script>
+</body>
+</html>
