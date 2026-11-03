@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - chore/lock-seven-confirmed-footprints
+      - fix/confirmed-seven-gis-source-test
     paths:
       - '.github/workflows/check-geo-merge.yml'
       - 'geo-building-merge.js'
