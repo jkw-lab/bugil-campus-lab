@@ -36,8 +36,23 @@ export const FACILITIES = [
    {x:-35,z:4,w:21,d:42,h:24,detail:"girlsVertical"},
    {x:-20,z:-16,w:35,d:16,h:22,detail:"girlsConnector"}
   ],
-  notes:"북일여고 운동장 남동쪽 · 북쪽 가로동의 서쪽 끝에서 남쪽으로 뻗는 ㄱ자형 별도 기숙사"}
-];
+  notes:"북일여고 운동장 남동쪽 · 북쪽 가로동의 서쪽 끝에서 남쪽으로 뻗는 ㄱ자형 별도 기숙사"},
+// Girls' high school has distinct classroom buildings separate from its dormitory.
+// Official school facilities identify A, B, and C blocks. This release represents the
+// two missing primary classroom masses, A/B; exact footprints are provisional because
+// the local OSM extract does not include both teaching blocks in usable detail.
+ {id:"girlsA",no:"여고 A",name:"북일여고 A동",type:"girlsAcademic",confidence:"추정",x:240,z:-57,focus:62,
+  parts:[
+   {x:0,z:0,w:85,d:22,h:17,detail:"girlsDanceRoof"},
+   {x:-32,z:9,w:20,d:22,h:13,detail:"girlsAStairs"}
+  ],
+  notes:"북일여고 교사동 A동 · 공식 시설 안내에 4층 무용실 표기 · 건물 위치·외곽 임시 배치"},
+ {id:"girlsB",no:"여고 B",name:"북일여고 B동",type:"girlsAcademic",confidence:"추정",x:246,z:-113,focus:60,
+  parts:[
+   {x:0,z:0,w:84,d:23,h:14,detail:"girlsBClassrooms"},
+   {x:32,z:-10,w:20,d:23,h:14,detail:"girlsBStairs"}
+  ],
+  notes:"북일여고 교사동 B동 · 공식 시설 안내에 1~3층 주요 시설 표기 · 건물 위치·외곽 임시 배치"}];
 export const LANDMARKS = [
  {id:"field",no:"08",name:"대운동장",x:-5,z:5,kind:"field",notes:"본관 남쪽의 큰 흙 운동장"},
  {id:"baseball",no:"09",name:"야구장",x:-214,z:106,kind:"baseball",notes:"서쪽 독립 야구장과 주변 시설"},
@@ -48,5 +63,6 @@ export const CAMERA_PRESETS = {
  campus:{position:[-282,322,351],target:[-10,3,-22]},
  main:{position:[-126,92,-40],target:[-6,12,-142]},
  field:{position:[-35,195,198],target:[-5,0,5]},
- dorm:{position:[277,162,295],target:[166,10,220]}
+ dorm:{position:[277,162,295],target:[166,10,220]},
+ girls:{position:[357,162,72],target:[240,14,-79]}
 };

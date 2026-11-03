@@ -6,7 +6,7 @@ import { ROAD_PATHS, WALK_PATHS, BOUNDARY } from './roads-data.js';
 import { buildMergedRoads } from './road-surface.js';
 import { elevation, heightColor, RELATIVE_HEIGHT_RANGE } from './terrain-model.js';
 
-// BUGIL CAMPUS LAB v0.4.4 — redesigned baseball, dorm and clear athletic field, not geospatial survey data.
+// BUGIL CAMPUS LAB v0.4.6 — redesigned baseball, dorm and clear athletic field, not geospatial survey data.
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfd4dc);
 scene.fog = new THREE.FogExp2(0xbfd4dc, 0.00115);
@@ -239,11 +239,21 @@ function addTree(x,z,s){
  }
  trees.push([x,z,s]);
 }
+// Prevent instanced vegetation from clipping any multipart building footprint.
+// This also protects both newly modelled girls' high school classroom blocks.
+function nearBuildingFootprint(x,z,clearance=6){
+ return FACILITIES.some(b=>b.parts.some(p=>{
+  const dx=x-(b.x+p.x),dz=z-(b.z+p.z);
+  const c=Math.cos(p.rot||0),sn=Math.sin(p.rot||0);
+  const lx=c*dx-sn*dz,lz=sn*dx+c*dz;
+  return Math.abs(lx)<p.w/2+clearance && Math.abs(lz)<p.d/2+clearance;
+ }));
+}
 for(let i=0;i<1370;i++){
  const x=(rnd()-.5)*795,z=(rnd()-.5)*730;
  const woodland=z<-176 || x<-284 || (z<-110&&x<-100&&rnd()<.6) || (x>212&&z<-70);
  if(!woodland)continue;
- if(FACILITIES.some(b=>Math.hypot(x-b.x,z-b.z)<46))continue;
+ if(nearBuildingFootprint(x,z,8))continue;
  if(ROAD_PATHS.some(r=>r.points.some((p,j)=>{
   if(!j)return false;
   const [ax,az]=r.points[j-1],[bx,bz]=p,dx=bx-ax,dz=bz-az;
@@ -255,7 +265,7 @@ for(let i=0;i<1370;i++){
 for(let i=0;i<160;i++){
  const x=-319+rnd()*130,z=-146+rnd()*335;
  if(Math.hypot(x+214,z-106)<76 || Math.hypot(x+8,z-12)<89)continue;
- if(FACILITIES.some(b=>Math.hypot(x-b.x,z-b.z)<30))continue;
+ if(nearBuildingFootprint(x,z,6))continue;
  addTree(x,z,.62+rnd()*.7);
 }
 for(const [sx,sz,ex,ez,n] of [
@@ -264,7 +274,7 @@ for(const [sx,sz,ex,ez,n] of [
  [73,181,127,181,9],[185,125,185,-94,27]]){
  for(let i=0;i<n;i++){
   const t=(i+.5)/n,x=sx+(ex-sx)*t,z=sz+(ez-sz)*t;
-  if(!FACILITIES.some(b=>Math.hypot(x-b.x,z-b.z)<21))addTree(x,z,.6+rnd()*.4)
+  if(!nearBuildingFootprint(x,z,5))addTree(x,z,.6+rnd()*.4)
  }
 }
 const trunks=new THREE.InstancedMesh(trunkGeo,M.trunk,trees.length);
@@ -292,6 +302,7 @@ function facadeFor(b){
  if(b.id==='dormOld')return {wall:M.pale,roof:M.greenRoof,glass:M.glass};
  if(b.id==='girlsDorm')return {wall:M.brick2,roof:M.greenRoof,glass:M.glass};
  if(b.id==='dormNew')return {wall:M.brick,roof:M.greenRoof,glass:M.glassDark};
+ if(b.type==='girlsAcademic')return {wall:M.whiteTrim,roof:M.roofTrim,glass:M.glassBlue};
  if(b.type==='gym')return {wall:M.pale,roof:M.stone,glass:M.glass};
  if(b.type==='modern')return {wall:M.pale,roof:M.greenRoof,glass:M.glassBlue};
  return {wall:M.white,roof:M.roof,glass:M.glass};
@@ -384,6 +395,43 @@ function gymPhotoDetail(part,p){
  cuboid(part,p.w*.46,.65,6,M.stone,0,4,p.d/2+3,false);
 }
 
+function girlsSchoolExterior(part,p,b){
+ // Photo-inspired but still provisional: window rhythm, restrained
+ // pale wall palette, and the orange curved dance-room roof on A block.
+ putRoofBorder(part,p,M.whiteTrim);
+ const front=p.d/2+.27;
+ for(let yy=4.0;yy<p.h-1;yy+=4.15){
+  cuboid(part,p.w+.3,.28,.38,M.stone,0,yy,front,false);
+ }
+ if(p===b.parts[0]){
+  const doorWidth=Math.min(12,p.w*.2);
+  cuboid(part,doorWidth,3.6,.28,M.glassDark,-p.w*.24,1.9,front+.3,false);
+  cuboid(part,doorWidth+2,.45,4.2,M.whiteTrim,-p.w*.24,4.0,front+1.7,false);
+ }
+ if(b.id==='girlsA' && p.detail==='girlsDanceRoof'){
+  // A block has an identifiable warm-orange curved top around the dance room.
+  const span=Math.min(30,p.w*.4),depth=Math.min(18,p.d*.77);
+  const verts=[];
+  for(let j=0;j<16;j++){
+   const z0=-depth/2+j*depth/16,z1=-depth/2+(j+1)*depth/16;
+   const cap=z=>2.5*Math.max(0,1-Math.pow(2*z/depth,2));
+   const y0=p.h+1+cap(z0),y1=p.h+1+cap(z1);
+   verts.push(-span/2,y0,z0,span/2,y0,z0,span/2,y1,z1,
+              -span/2,y0,z0,span/2,y1,z1,-span/2,y1,z1);
+  }
+  const roof=new THREE.BufferGeometry();
+  roof.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+  roof.computeVertexNormals();
+  const mesh=new THREE.Mesh(roof,new THREE.MeshStandardMaterial({
+   color:0xc97739,roughness:.83,side:THREE.DoubleSide
+  }));
+  part.add(mesh);
+ }
+ if(b.id==='girlsB'&&p.detail==='girlsBClassrooms'){
+  for(let x=-p.w/2+5;x<p.w/2-2;x+=10)
+   cuboid(part,.45,p.h-1,.48,M.whiteTrim,x,p.h/2,front+.15,false);
+ }
+}
 function createFacility(b){
  const group=new THREE.Group();group.position.set(b.x,elevation(b.x,b.z),b.z);scene.add(group);
  const palette=facadeFor(b),major=[];
@@ -420,6 +468,7 @@ function createFacility(b){
     }
   }
   if(b.id==='gym')gymPhotoDetail(part,p);
+  if(b.type==='girlsAcademic')girlsSchoolExterior(part,p,b);
   if(b.id==='dormNew')dormNewPhotoDetail(part,p);
   if(b.id==='girlsDorm'){
     // Separate girls' dorm, recognizable by its open ㄱ / L roof footprint.
@@ -515,6 +564,11 @@ function select(b,move){
  }
 }
 select(FACILITIES[0],false);
+document.getElementById('girls-focus')?.addEventListener('click',()=>{
+ const target=CAMERA_PRESETS.girls;
+ flyTo(target.position,target.target);
+ showNotice('북일여고 A·B 교사동 · 위치/윤곽 잠정');
+});
 for(const button of document.querySelectorAll('#views button')){
  button.addEventListener('click',()=>{
   document.querySelectorAll('#views button').forEach(e=>e.classList.toggle('active',e===button));
@@ -597,7 +651,7 @@ function separateBuilding(b){
 function restore(){
  for(const o of debris){scene.remove(o.m);o.m.geometry=boxGeo}debris.length=0;
  FACILITIES.forEach(b=>{b.collapsed=false;b.group.visible=true;b.label.visible=labelsVisible});
- document.getElementById('status-title').textContent='주요 건물 8동 · 배치 v0.4.5';
+ document.getElementById('status-title').textContent='주요 건물 '+FACILITIES.length+'동 · 배치 v0.4.6';
  showNotice('전체 캠퍼스 복구 완료');
 }
 document.getElementById('restore').addEventListener('click',restore);
