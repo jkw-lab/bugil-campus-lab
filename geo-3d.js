@@ -1,360 +1,311 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { loadGeographicElevation } from './geo-dem.js';
-import { createProvisionalSchoolFootprints } from './geo-missing-buildings.js';
 
-// Geographic 3D prototype: genuine OSM footprint geometry, not an indoor or survey model.
-// Game-local coordinates are never mixed with WGS84 in this preview.
-// WGS84 origin is a public school-vicinity point, not any building's measured corner.
-const ORIGIN = {lon:127.1585,lat:36.8315};
-const X_M = 111320*Math.cos(ORIGIN.lat*Math.PI/180);
-const Z_M = 111133;
-const METRE_RADIUS = 690;
-const mobile = matchMedia('(max-width:760px)').matches;
-const $ = id=>document.getElementById(id);
-const host=$('scene');
-const scene=new THREE.Scene();
-scene.background=new THREE.Color('#b9d0da');
-scene.fog=new THREE.FogExp2('#b9d0da',.00065);
-const camera=new THREE.PerspectiveCamera(44,innerWidth/innerHeight,1,4500);
-camera.position.set(-340,470,505);
+/**
+ * STRICT GEOGRAPHIC MODE
+ *
+ * Buildings: observed/public polygon rings only, queried live from the Korea
+ * Building Footprints v2 FeatureServer (MOIS-derived online visualization).
+ * Fallback: already-sourced OSM polygon rings, never phototraced guesses.
+ * Roads: original OSM LineString centerlines only; no inferred road width.
+ * Vertical geometry: DEM terrain only. No unknown building heights extruded.
+ * Floor counts are shown as metadata, NEVER multiplied into a fake height.
+ * Public data source is not copied for persistent/offline use.
+ */
+const ORIGIN={lon:127.1585,lat:36.8315};
+const MX=111320*Math.cos(ORIGIN.lat*Math.PI/180),MZ=111133;
+const SOURCE_GOV='https://portal.esrikr.com/arcgis/rest/services/MOIS_KR_Buildings_v2/FeatureServer/0/query';
+const SOURCE_ITEM='https://www.arcgis.com/home/item.html?id=b2c7a37bac8d4e40a85435b3f3d96d05';
+const BOUNDS={xmin:127.1562,ymin:36.8288,xmax:127.1630,ymax:36.8346};
+const TARGETS=[
+ {id:'9248057',label:'북일고등학교 · 5층 건물',note:'공개 건물명에 본관 표기는 없음'},
+ {id:'9248086',label:'북일여고 제1교',note:'공개 명칭: 제1교'},
+ {id:'9248104',label:'북일여고 제2교',note:'공개 명칭: 제2교'}
+];
+const $=id=>document.getElementById(id);
+const host=$('scene'),mobile=matchMedia('(max-width:760px)').matches;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#bcd2d9');
+scene.fog=new THREE.FogExp2('#bcd2d9',.00055);
+const camera=new THREE.PerspectiveCamera(44,innerWidth/innerHeight,1,4000);
+camera.position.set(-320,480,440);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.4:1.7));
+renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.35:1.7));
 renderer.setSize(innerWidth,innerHeight);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
-renderer.shadowMap.enabled=false;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.2;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.16;
 host.append(renderer.domElement);
 const controls=new OrbitControls(camera,renderer.domElement);
-controls.enableDamping=true;
-controls.dampingFactor=.08;
-controls.maxPolarAngle=Math.PI/2.08;
-controls.minDistance=30;
-controls.maxDistance=2100;
-controls.target.set(0,0,0);
-controls.update();
-scene.add(new THREE.HemisphereLight(0xffffff,0x647c7a,2.3));
-const light=new THREE.DirectionalLight(0xfff4d4,2.0);
-light.position.set(-220,360,-170);
-scene.add(light);
-const grid=new THREE.GridHelper(1530,61,0x5c8079,0x74998e);
-grid.position.y=.04;grid.material.opacity=.20;grid.material.transparent=true;scene.add(grid);
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(1800,1800),new THREE.MeshStandardMaterial({color:'#6a947e',roughness:1}));
-ground.rotation.x=-Math.PI/2;ground.position.y=-.07;ground.receiveShadow=true;scene.add(ground);
-const buildings=new THREE.Group(),land=new THREE.Group(),roads=new THREE.Group();
-scene.add(land,roads,buildings);
-const roofMaterial=new THREE.MeshStandardMaterial({color:0xd6d6ce,roughness:.87});
-const walls=[
- new THREE.MeshStandardMaterial({color:0xb1b9b3,roughness:.9}),
- new THREE.MeshStandardMaterial({color:0xb2a59a,roughness:.9}),
- new THREE.MeshStandardMaterial({color:0xa1adb0,roughness:.8}),
- new THREE.MeshStandardMaterial({color:0xb5bba9,roughness:.85})
-];
-const streetMat=new THREE.MeshStandardMaterial({color:0x737d7d,roughness:1,side:THREE.DoubleSide});
-const footpathMat=new THREE.MeshStandardMaterial({color:0xb2ac9d,roughness:1,side:THREE.DoubleSide});
-const grassMat=new THREE.MeshStandardMaterial({color:0x78996a,roughness:1,side:THREE.DoubleSide});
-const forestMat=new THREE.MeshStandardMaterial({color:0x4c7759,roughness:1,side:THREE.DoubleSide});
-const pitchMat=new THREE.MeshStandardMaterial({color:0x92ab79,roughness:1,side:THREE.DoubleSide});
-const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
-const drawnMeshes=[];
-let currentData=null;
+controls.enableDamping=true;controls.dampingFactor=.08;
+controls.maxPolarAngle=Math.PI/2.06;controls.minDistance=15;controls.maxDistance=2100;
+controls.target.set(0,0,0);controls.update();
+scene.add(new THREE.HemisphereLight(0xffffff,0x536a67,2.2));
+const sun=new THREE.DirectionalLight(0xfff5dd,1.55);sun.position.set(-240,450,-155);scene.add(sun);
+const terrainMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
+const terrain=new THREE.Mesh(new THREE.PlaneGeometry(1800,1800,1,1),terrainMaterial);
+terrain.rotation.x=-Math.PI/2;scene.add(terrain);
+const featuresGroup=new THREE.Group(),roadsGroup=new THREE.Group(),landGroup=new THREE.Group();
+scene.add(landGroup,roadsGroup,featuresGroup);
+const buildingFill=new THREE.MeshBasicMaterial({color:0x92d9e2,transparent:true,opacity:.45,side:THREE.DoubleSide,depthWrite:false});
+const buildingEdge=new THREE.LineBasicMaterial({color:0x165f7a,linewidth:1});
+const footLine=new THREE.LineBasicMaterial({color:0xe9e2c3,linewidth:1});
+const roadLine=new THREE.LineBasicMaterial({color:0x57626a,linewidth:1});
+const parkFill=new THREE.MeshBasicMaterial({color:0x467b66,transparent:true,opacity:.25,side:THREE.DoubleSide,depthWrite:false});
 let dem=null;
-let manualCount=0;
-let schoolBlocks=[];
-const provisionalLabels=new THREE.Group();scene.add(provisionalLabels);
-const mapMarkers=[];
-const terrainHeight=(x,z)=>dem?dem.elevation(x,z):0;
-function applyRealTerrain(){
+let activeData=null,buildingSource=null;
+const clickable=[],idToSurface=new Map(),targetEntries=new Map();
+const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
+const world=p=>[(p[0]-ORIGIN.lon)*MX,(ORIGIN.lat-p[1])*MZ];
+const surface=(x,z)=>dem?dem.elevation(x,z):0;
+function isCoord(p){return Array.isArray(p)&&p.length>=2&&Number.isFinite(p[0])&&Number.isFinite(p[1])&&p[0]>126&&p[0]<129&&p[1]>35&&p[1]<39;}
+function polygonParts(f){
+ if(f?.geometry?.type==='Polygon')return [f.geometry.coordinates];
+ if(f?.geometry?.type==='MultiPolygon')return f.geometry.coordinates;
+ return [];
+}
+function ringPaths(rings){
+ if(!Array.isArray(rings)||!Array.isArray(rings[0])||rings[0].length<4)return null;
+ if(rings[0].some(p=>!isCoord(p)))return null;
+ const outer=rings[0].map(world);
+ const s=new THREE.Shape();
+ outer.forEach(([x,z],i)=>i?s.lineTo(x,-z):s.moveTo(x,-z));s.closePath();
+ for(const hole of rings.slice(1)){
+  if(!Array.isArray(hole)||hole.length<4||hole.some(p=>!isCoord(p)))continue;
+  const path=new THREE.Path();
+  hole.map(world).forEach(([x,z],i)=>i?path.lineTo(x,-z):path.moveTo(x,-z));
+  path.closePath();s.holes.push(path);
+ }
+ return s;
+}
+function drapeShape(rings){
+ const shape=ringPaths(rings);if(!shape)return null;
+ const geo=new THREE.ShapeGeometry(shape);
+ geo.rotateX(-Math.PI/2);
+ const a=geo.getAttribute('position');
+ for(let i=0;i<a.count;i++)a.setY(i,surface(a.getX(i),a.getZ(i))+.34);
+ a.needsUpdate=true;geo.computeVertexNormals();
+ return geo;
+}
+function boundaryLine(ring,material,yOffset=.51){
+ if(!Array.isArray(ring)||ring.length<4||ring.some(p=>!isCoord(p)))return null;
+ const ps=ring.map(world),vertices=[];
+ for(let i=1;i<ps.length;i++){
+  const [x1,z1]=ps[i-1],[x2,z2]=ps[i];
+  const dist=Math.hypot(x2-x1,z2-z1);
+  const n=Math.max(1,Math.ceil(dist/4));
+  for(let j=0;j<n;j++){
+   const t=j/n,x=x1+(x2-x1)*t,z=z1+(z2-z1)*t;
+   vertices.push(new THREE.Vector3(x,surface(x,z)+yOffset,z));
+  }
+ }
+ const [x,z]=ps[ps.length-1];vertices.push(new THREE.Vector3(x,surface(x,z)+yOffset,z));
+ if(vertices.length<3)return null;
+ return new THREE.Line(new THREE.BufferGeometry().setFromPoints(vertices),material);
+}
+function featureId(f){
+ const p=f.properties||{};
+ return String(p.objectid??p.OBJECTID??f.id??'');
+}
+function officialLabel(f){
+ const p=f.properties||{};
+ const name=[p.building_name,p.buld_nm_dc].filter(Boolean).join(' · ').trim();
+ return name||'건물명 미등록';
+}
+function addBuilding(f,source){
+ let count=0;
+ for(const rings of polygonParts(f)){
+  const geo=drapeShape(rings);if(!geo)continue;
+  const mesh=new THREE.Mesh(geo,buildingFill);
+  mesh.userData={feature:f,source};mesh.renderOrder=3;
+  featuresGroup.add(mesh);clickable.push(mesh);count++;
+  for(const ring of rings){
+   const line=boundaryLine(ring,buildingEdge);
+   if(line){line.renderOrder=4;featuresGroup.add(line);}
+  }
+ }
+ const id=featureId(f);
+ if(id)idToSurface.set(id,f);
+ return count;
+}
+function addRoad(f){
+ const g=f.geometry||{};
+ const paths=g.type==='LineString'?[g.coordinates]:
+   g.type==='MultiLineString'?g.coordinates:[];
+ let count=0;
+ for(const pts of paths){
+  if(!Array.isArray(pts)||pts.length<2||pts.some(p=>!isCoord(p)))continue;
+  const xyz=[];
+  const pairs=pts.map(world);
+  for(let i=1;i<pairs.length;i++){
+   const [x1,z1]=pairs[i-1],[x2,z2]=pairs[i];
+   const d=Math.hypot(x2-x1,z2-z1),n=Math.max(1,Math.ceil(d/5));
+   for(let j=0;j<n;j++){
+    const t=j/n,x=x1+(x2-x1)*t,z=z1+(z2-z1)*t;
+    xyz.push(new THREE.Vector3(x,surface(x,z)+.47,z));
+   }
+  }
+  const [x,z]=pairs[pairs.length-1];
+  xyz.push(new THREE.Vector3(x,surface(x,z)+.47,z));
+  const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(xyz),
+    f.properties?.highway==='footway'?footLine:roadLine);
+  line.renderOrder=5;roadsGroup.add(line);count++;
+ }
+ return count;
+}
+function addLand(f){
+ let count=0;
+ for(const rings of polygonParts(f)){
+  const geo=drapeShape(rings);if(!geo)continue;
+  const mesh=new THREE.Mesh(geo,parkFill);mesh.renderOrder=1;
+  landGroup.add(mesh);count++;
+ }
+ return count;
+}
+function clearGroup(g){for(const o of [...g.children]){
+ g.remove(o);o.geometry?.dispose();
+}}
+function setTerrain(){
  if(!dem)return;
- const geometry=new THREE.PlaneGeometry(1800,1800,100,100);
- geometry.rotateX(-Math.PI/2);
- const pos=geometry.getAttribute('position');
- const colors=[];
- const low=new THREE.Color('#5e936f'),high=new THREE.Color('#b6ad7f');
- const c=new THREE.Color();
- for(let i=0;i<pos.count;i++){
-  const y=terrainHeight(pos.getX(i),pos.getZ(i));
-  pos.setY(i,y-.08);
-  c.copy(low).lerp(high,THREE.MathUtils.clamp((y+20)/105,0,1));
+ // DEM's sampled, geographic elevations are interpolated only within its actual grid.
+ const geo=new THREE.PlaneGeometry(1800,1800,120,120);
+ geo.rotateX(-Math.PI/2);
+ const a=geo.getAttribute('position'),colors=[];
+ const low=new THREE.Color('#5d8e79'),high=new THREE.Color('#aeab77'),c=new THREE.Color();
+ for(let i=0;i<a.count;i++){
+  const x=a.getX(i),z=a.getZ(i),h=surface(x,z);
+  a.setY(i,h-.08);
+  c.copy(low).lerp(high,THREE.MathUtils.clamp((h+30)/115,0,1));
   colors.push(c.r,c.g,c.b);
  }
- pos.needsUpdate=true;
- geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
- geometry.computeVertexNormals();
- ground.geometry.dispose();ground.geometry=geometry;
- // Geometry is already rotated into X/Z; undo the initial flat-plane object rotation.
- ground.rotation.x=0;ground.position.y=0;
- ground.material.dispose();
- ground.material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
- grid.visible=false;
- for(const m of mapMarkers){m.base.position.y=terrainHeight(m.x,m.z)+1;m.sprite.position.y=terrainHeight(m.x,m.z)+24;}
+ a.needsUpdate=true;geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+ geo.computeVertexNormals();
+ terrain.geometry.dispose();terrain.geometry=geo;
+ terrain.rotation.x=0;terrain.position.y=0;
 }
-function toWorld(pair){
- return [(pair[0]-ORIGIN.lon)*X_M,(ORIGIN.lat-pair[1])*Z_M];
-}
-function nearWorld(x,z){return Math.hypot(x,z)<METRE_RADIUS;}
-function validCoord(p){return Array.isArray(p)&&p.length>=2&&Number.isFinite(p[0])&&Number.isFinite(p[1]);}
-function shapeFromRings(rings) {
-  const ext=rings?.[0];
-  if(!Array.isArray(ext)||ext.length<4)return null;
-  const out=ext.filter(validCoord).map(p=>toWorld(p));
-  if(out.length<4)return null;
-  const shape=new THREE.Shape();
-  out.forEach((p,i)=>i===0?shape.moveTo(p[0],-p[1]):shape.lineTo(p[0],-p[1]));
-  shape.closePath();
-  for(const hole of rings.slice(1)) {
-    if(!Array.isArray(hole)||hole.length<4)continue;
-    const h=new THREE.Path();
-    hole.filter(validCoord).map(toWorld).forEach((p,i)=>i===0?h.moveTo(p[0],-p[1]):h.lineTo(p[0],-p[1]));
-    h.closePath();
-    shape.holes.push(h);
-  }
-  return {shape,centroid:out.reduce((a,p)=>[a[0]+p[0]/out.length,a[1]+p[1]/out.length],[0,0])};
-}
-function polygons(geo) {
-  if(geo?.type==='Polygon')return [geo.coordinates];
-  if(geo?.type==='MultiPolygon')return geo.coordinates;
-  return [];
-}
-function heightInfo(props) {
- if(props.localModel)return {height:props.visualHeightMetres||15,known:false,label:'사진 기반 임시 건물 높이'};
- const h=Number.parseFloat(String(props.height??''));
- if(Number.isFinite(h)&&h>=2&&h<=120)return {height:h,known:true,label:'공개 높이 태그'};
- const levels=Number.parseFloat(String(props.levels??props['building:levels']??''));
- if(Number.isFinite(levels)&&levels>=1&&levels<=35)
-   return {height:levels*3.4,known:false,label:'공개 층수 × 임시 층고 3.4m'};
- return {height:props.building==='industrial'?9:11,known:false,label:'추정치'};
-}
-function clearGroup(group) {
- for(const child of [...group.children]){
-   group.remove(child);
-   child.geometry?.dispose();
- }
-}
-function makeBuilding(f) {
- const info=heightInfo(f.properties||{});
- let n=0;
- for(const rings of polygons(f.geometry)){
-   const parsed=shapeFromRings(rings);
-   if(!parsed||!nearWorld(...parsed.centroid))continue;
-   let geo;
-   try{
-     geo=new THREE.ExtrudeGeometry(parsed.shape,{depth:info.height,bevelEnabled:false,steps:1,curveSegments:1});
-     geo.rotateX(-Math.PI/2);
-   }catch(e){continue;}
-   const hash=String(f.id||f.properties?.name||'x').split('').reduce((n,ch)=>((n*31)+ch.charCodeAt(0))>>>0,0);
-   const mat=(f.properties||{}).localModel?new THREE.MeshStandardMaterial({color:0xc4b8a3,roughness:.86}):walls[hash%walls.length];
-   const mesh=new THREE.Mesh(geo,[roofMaterial,mat]);
-   mesh.position.y=terrainHeight(...parsed.centroid);
-   mesh.userData={properties:f.properties||{},height:info,id:f.id||'',centroid:parsed.centroid};
-   mesh.castShadow=false;mesh.receiveShadow=true;
-   buildings.add(mesh);drawnMeshes.push(mesh);n++;
- }
- return n;
-}
-function makeLand(f) {
- const prop=f.properties||{};
- if(!(prop.leisure==='pitch'||prop.leisure==='park'||prop.landuse==='forest'||prop.landuse==='grass'||prop.landuse==='recreation_ground'))return;
- for(const rings of polygons(f.geometry)) {
-   const parsed=shapeFromRings(rings);
-   if(!parsed||!nearWorld(...parsed.centroid))continue;
-   try{
-    const geo=new THREE.ShapeGeometry(parsed.shape);
-    geo.rotateX(-Math.PI/2);
-    const attrs=geo.getAttribute('position');
-    for(let i=0;i<attrs.count;i++) attrs.setY(i,terrainHeight(attrs.getX(i),attrs.getZ(i))+.18);
-    attrs.needsUpdate=true;geo.computeVertexNormals();
-    const p=f.properties||{};
-    const mat=p.landuse==='forest'?forestMat:p.leisure==='pitch'?pitchMat:grassMat;
-    const mesh=new THREE.Mesh(geo,mat);land.add(mesh);
-   }catch(e){}
- }
-}
-function makeRoad(f) {
- const g=f.geometry||{};
- const collections=g.type==='LineString'?[g.coordinates]:
-     g.type==='MultiLineString'?g.coordinates:[];
- const tag=f.properties?.road||f.properties?.highway||'service';
- const isWalk=/footway|path|pedestrian/.test(tag);
- const width=isWalk?2.7:tag==='residential'?5.4:tag==='tertiary'?7:4.3;
- for(const coll of collections) {
-   if(!Array.isArray(coll)||coll.length<2)continue;
-   const points=coll.filter(validCoord).map(toWorld);
-   const verts=[];
-   for(let i=1;i<points.length;i++){
-     const [ax,az]=points[i-1],[bx,bz]=points[i];
-     if(!nearWorld((ax+bx)/2,(az+bz)/2))continue;
-     const len=Math.hypot(bx-ax,bz-az);
-     if(len<.1)continue;
-     const segments=Math.max(1,Math.ceil(len/13));
-     const ox=(bz-az)/len*width/2,oz=-(bx-ax)/len*width/2;
-     for(let j=0;j<segments;j++){
-       const t0=j/segments,t1=(j+1)/segments;
-       const x1=ax+(bx-ax)*t0,z1=az+(bz-az)*t0;
-       const x2=ax+(bx-ax)*t1,z2=az+(bz-az)*t1;
-       const q=(x,z)=>[x,terrainHeight(x,z)+.24,z];
-       const p1=q(x1+ox,z1+oz),p2=q(x1-ox,z1-oz);
-       const p3=q(x2+ox,z2+oz),p4=q(x2-ox,z2-oz);
-       verts.push(...p1,...p2,...p3,...p2,...p4,...p3);
-     }
-   }
-   if(verts.length===0)continue;
-   const geo=new THREE.BufferGeometry();
-   geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
-   geo.computeVertexNormals();
-   const mesh=new THREE.Mesh(geo,isWalk?footpathMat:streetMat);
-   mesh.renderOrder=1;roads.add(mesh);
- }
-}
-function createMarker(label,lon,lat,color) {
- const [x,z]=toWorld([lon,lat]);
- const base=new THREE.Mesh(new THREE.CylinderGeometry(2.5,2.5,.8,16),new THREE.MeshBasicMaterial({color}));
- base.position.set(x,.7,z);base.renderOrder=3;scene.add(base);
- const c=document.createElement('canvas');c.width=320;c.height=68;
- const cx=c.getContext('2d');
- cx.fillStyle='#102b38dd';cx.fillRect(0,0,320,68);
- cx.fillStyle='#ffffff';cx.font='bold 24px system-ui';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(label,160,34);
- const tex=new THREE.CanvasTexture(c);
- const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
- sprite.scale.set(64,13.6,1);sprite.position.set(x,23,z);scene.add(sprite);
- mapMarkers.push({base,sprite,x,z});
-}
-createMarker('북일고 지도 대표점',127.15817,36.83224,0xf8b863);
-createMarker('북일여고 지도 대표점',127.16009,36.83162,0x64c6cf);
-function placeSchoolLabel(b){
- const [x,z]=toWorld(b.centerLonLat);
- const canvas=document.createElement('canvas');canvas.width=560;canvas.height=112;
- const c=canvas.getContext('2d');
- c.fillStyle='#172631e6';c.beginPath();c.roundRect(7,7,546,98,18);c.fill();
- c.strokeStyle='#f0bf80';c.lineWidth=3;c.stroke();
- c.font='bold 31px system-ui';c.textAlign='center';c.textBaseline='middle';
- c.fillStyle='#ffdfaf';c.fillText(b.name+' · 추정',280,56);
- const texture=new THREE.CanvasTexture(canvas);
- const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false}));
- sprite.position.set(x,terrainHeight(x,z)+b.estimatedHeight+16,z);
- sprite.scale.set(81,16.2,1);provisionalLabels.add(sprite);
-}
-function addMissingSchoolBlocks(data){
- manualCount=0;schoolBlocks=[];
- clearGroup(provisionalLabels);
+async function loadGov(){
+ // The third-party service is licensed for online visualisation; do not
+ // permanently download/rehost the feature dataset or cache offline.
+ const qs=new URLSearchParams({
+  f:'geojson',
+  geometry:[BOUNDS.xmin,BOUNDS.ymin,BOUNDS.xmax,BOUNDS.ymax].join(','),
+  geometryType:'esriGeometryEnvelope',inSR:'4326',
+  spatialRel:'esriSpatialRelIntersects',where:'1=1',
+  outFields:'*',returnGeometry:'true',outSR:'4326',
+  resultRecordCount:'2000'
+ });
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
  try{
-  const modeled=createProvisionalSchoolFootprints(data);
-  for(const f of modeled.features)manualCount+=makeBuilding(f);
-  schoolBlocks=modeled.buildings;
-  schoolBlocks.forEach(placeSchoolLabel);
-  $('manual-status').textContent='추가 교사동 '+schoolBlocks.map(b=>b.name).join(' · ')+' (외곽·높이 잠정)';
- }catch(e){
-  console.warn('Manual school infill unavailable',e);
-  $('manual-status').textContent='일부 교사동은 지리정보 변환 실패로 추가하지 못함';
- }
+  const response=await fetch(SOURCE_GOV+'?'+qs,{signal:controller.signal,cache:'no-store'});
+  if(!response.ok)throw Error('정부 건물 경계 서비스 HTTP '+response.status);
+  const json=await response.json();
+  if(json.error)throw Error('지도 서비스 오류: '+JSON.stringify(json.error));
+  if(json.type!=='FeatureCollection'||!Array.isArray(json.features)||json.features.length<15
+    ||json.features.length>=2000||json.exceededTransferLimit)throw Error('건물 데이터 누락/불완전');
+  if(!json.features.every(f=>polygonParts(f).length>0))throw Error('비폴리곤 건물 데이터');
+  buildingSource='정부 건물 도형 (온라인)';
+  return json.features;
+ }finally{clearTimeout(timer);}
 }
-
-function renderData(data) {
- currentData=data;
- clearGroup(buildings);clearGroup(land);clearGroup(roads);
- drawnMeshes.length=0;
- const features=(data.features||[]).filter(f=>f?.geometry);
- const kind=f=>f.properties?.kind||f.properties?.featureType||(
- f.properties?.building?'building':f.properties?.highway?'road':'land');
- const landFeatures=features.filter(f=>kind(f)==='land');
- const roadFeatures=features.filter(f=>kind(f)==='road');
- const buildingFeatures=features.filter(f=>kind(f)==='building');
- landFeatures.slice(0,500).forEach(makeLand);
- roadFeatures.slice(0,850).forEach(makeRoad);
- let polygonsDrawn=0;
- for(const f of buildingFeatures.slice(0,2000)) {
-   polygonsDrawn+=makeBuilding(f);
-   if(polygonsDrawn>1200)break;
- }
- addMissingSchoolBlocks(data);
- const provisional=drawnMeshes.filter(x=>!x.userData.height.known).length;
- const displayed=drawnMeshes.length;
- $('status').textContent='공개 OSM 건물 윤곽 '+(displayed-manualCount)+'개 + 교사동 '+schoolBlocks.length+'동 · 도로 '+roads.children.length+'개 · 높이 추정 '+provisional+'개';
- $('building').textContent='회색: 실제 OSM 외곽선 / 베이지색: 잠정 교사동 모델. 건물을 선택해 출처를 확인할 수 있어.';
- $('retry').hidden=true;
- if(!displayed) {
-   $('status').textContent='수집된 건물 외곽선이 없어서 표시할 수 없어.';
-   $('retry').hidden=false;
- }
+function buildingFromOSM(osm){
+ buildingSource='OpenStreetMap (정부 서비스 미접속)';
+ return osm.features.filter(f=>f.properties?.featureType==='building'
+   &&polygonParts(f).length>0);
 }
-async function load() {
- $('status').textContent='공개 지리정보를 가져오는 중…';
- $('retry').hidden=true;
- let err='자료 없음';
- for(const url of ['./geo/osm-2026-bugil-vicinity.geojson','./api/campus-geo']) {
-  try {
-    const res=await fetch(url,{cache:'no-cache'});
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    const data=await res.json();
-    if(data?.type!=='FeatureCollection'||!Array.isArray(data.features))throw new Error('GeoJSON 형식 오류');
-    if(data.features.length<10)throw new Error('표시할 공개 지형 자료가 부족함');
-    try{
-      dem=await loadGeographicElevation();
-      applyRealTerrain();
-      $('terrain-status').textContent='지형: Copernicus 90m 고도 · 해발 '+dem.min.toFixed(0)+'~'+dem.max.toFixed(0)+'m · 기준 '+dem.baseline.toFixed(0)+'m';
-    }catch(terrainError){
-      console.error('Terrain data loading failed',terrainError);
-      $('terrain-status').textContent='고도 데이터 로드 실패: 평면 임시 표시 ('+String(terrainError.message||terrainError)+')';
-    }
-    renderData(data);return;
-  } catch(e){err=String(e.message||e);}
- }
- $('status').textContent='외부 지리정보 불러오기 실패';
- $('building').textContent='공개 지리정보 서비스에 접근하지 못했어. 현재 화면을 실제 캠퍼스 지도라고 볼 수 없어. 오류: '+err;
- $('retry').hidden=false;
+function focusTarget(id){
+ const f=idToSurface.get(id);
+ if(!f){$('detail').textContent='해당 공식 건물 ID는 현재 지도 자료에서 확인되지 않았어.';return;}
+ const pts=polygonParts(f)[0][0].map(world);
+ const xs=pts.map(p=>p[0]),zs=pts.map(p=>p[1]);
+ const x=(Math.min(...xs)+Math.max(...xs))/2,z=(Math.min(...zs)+Math.max(...zs))/2;
+ const y=surface(x,z);
+ controls.target.set(x,y,z);camera.position.set(x-110,y+150,z+190);controls.update();
+ showBuilding(f,buildingSource);
 }
-$('retry').onclick=load;
-function focusSchool(id){
- const b=schoolBlocks.find(b=>b.id===id);
- if(!b)return;
- const [x,z]=toWorld(b.centerLonLat),y=terrainHeight(x,z);
- controls.target.set(x,y+11,z);
- camera.position.set(x-127,y+125,z+170);
- controls.update();
-}
-$('boys-main').onclick=()=>focusSchool('main');
-$('girls-main').onclick=()=>focusSchool('girlsA');
-$('top').onclick=()=>{
-  controls.target.set(0,0,0);
-  camera.position.set(0,1150,.01);
-  controls.update();
-};
-$('isometric').onclick=()=>{
-  controls.target.set(0,0,0);
-  camera.position.set(-340,470,505);
-  controls.update();
-};
-let start=null;
-renderer.domElement.addEventListener('pointerdown',e=>start={x:e.clientX,y:e.clientY});
-renderer.domElement.addEventListener('pointerup',e=>{
- if(!start||Math.hypot(e.clientX-start.x,e.clientY-start.y)>8){start=null;return;}
- start=null;
- const box=renderer.domElement.getBoundingClientRect();
- mouse.x=((e.clientX-box.left)/box.width)*2-1;
- mouse.y=-((e.clientY-box.top)/box.height)*2+1;
- raycaster.setFromCamera(mouse,camera);
- const hit=raycaster.intersectObjects(drawnMeshes,false)[0];
- if(!hit)return;
- const d=hit.object.userData;
- const p=d.properties;
- const lines=[
-  (p.name||'이름 미등록 건물'),
-  '출처: '+(p.localModel?'기존 사진 기반 모형의 임시 정렬':'OpenStreetMap 공개 건물 윤곽'),
-  '건물 식별값: '+d.id,
-  '높이: '+d.height.height.toFixed(1)+'m ('+d.height.label+')',
-  '건물 분류: '+(p.building||'미분류'),
-  p.localModel?'위치·형태: 잠정 (사진 모델을 공개 운동장 기준점으로 정렬)':'위치: OSM 실제 지도 좌표의 외곽선 입체화'
+function showBuilding(f,source){
+ const p=f.properties||{},lines=[
+   officialLabel(f),
+   '출처: '+source,
+   '건물 ID: '+featureId(f),
+   '지상 층수: '+(p.gro_flo_co??'기록 없음'),
+   '건물 높이(m): 측정값 미확보 · 임의 높이 표시 없음',
+   '평면 윤곽: 제공기관 실제 폴리곤',
  ];
- $('building').textContent=lines.join('\n');
- $('building').style.whiteSpace='pre-line';
-});
-function resize(){
- camera.aspect=innerWidth/innerHeight;
- camera.updateProjectionMatrix();
- renderer.setSize(innerWidth,innerHeight);
+ $('detail').textContent=lines.join('\n');
+ $('detail').style.whiteSpace='pre-line';
 }
-addEventListener('resize',resize);
+function renderBuildings(features,source){
+ clearGroup(featuresGroup);clickable.length=0;idToSurface.clear();
+ let drawn=0;
+ for(const f of features)drawn+=addBuilding(f,source);
+ $('status').textContent='지리정보 건물 외곽선 '+drawn+'개 · 도로 중심선 '+roadsGroup.children.length+'개';
+ $('source').textContent='건물: '+buildingSource+' · 도로: OSM 실제 선형 좌표';
+ $('height-note').textContent='건물 높이 정보 없음 → 지형 위 실제 평면 윤곽만 표시 (가상 벽·지붕 생성하지 않음)';
+ for(const t of TARGETS){
+  const el=$(t.id);if(!el)continue;
+  el.disabled=!idToSurface.has(t.id);
+  el.title=idToSurface.has(t.id)?t.note:'출처에서 건물 ID를 확인하지 못함';
+ }
+}
+async function load(){
+ $('status').textContent='실제 지도 자료를 불러오는 중…';
+ let osm;
+ try{
+  const r=await fetch('./geo/osm-2026-bugil-vicinity.geojson');
+  if(!r.ok)throw Error('OSM 자료 HTTP '+r.status);
+  osm=await r.json();
+  if(osm?.type!=='FeatureCollection'||!Array.isArray(osm.features))throw Error('GeoJSON 오류');
+ }catch(err){
+  $('status').textContent='도로 원본 지도 데이터 불러오기 실패: '+String(err.message||err);
+  return;
+ }
+ try{
+  dem=await loadGeographicElevation();setTerrain();
+  $('terrain-status').textContent='지형: 실제 Copernicus GLO-90 고도 · 해발 '+dem.min+'~'+dem.max+'m · 90m 표본 보간';
+ }catch(err){
+  $('terrain-status').textContent='고도 데이터 미확보 — 지형 고도 표시 중단: '+String(err.message||err);
+  // No guessed flat fallback: without DEM do not render model.
+  $('status').textContent='실제 표고 정보를 가져오지 못해 지리정보 3D 모델을 표시하지 않았어.';
+  return;
+ }
+ clearGroup(roadsGroup);clearGroup(landGroup);
+ let roadCount=0;
+ for(const f of osm.features){
+  if(f.properties?.featureType==='road')roadCount+=addRoad(f);
+  else if(f.properties?.featureType==='land' &&
+       (f.properties?.leisure==='pitch'||f.properties?.leisure==='park'||
+        f.properties?.landuse==='forest'||f.properties?.landuse==='grass'))
+    addLand(f);
+ }
+ $('road-note').textContent='도로 '+roadCount+'개: OSM 중심선 그대로 (도로 폭·교량 높이 자료 미확보)';
+ let buildings;
+ try{
+  buildings=await loadGov();
+  $('gov-note').textContent='정부 건물 경계 온라인 서비스 연결됨 · 원본 자료 별도 저장 안 함';
+ }catch(err){
+  console.warn('Official building service unavailable, showing OSM-only outlines:',err);
+  buildings=buildingFromOSM(osm);
+  $('gov-note').textContent='정부 건물 경계 조회 실패. OSM 실제 외곽선만 표시 — 본관 등 일부 건물 미표시';
+ }
+ renderBuildings(buildings,buildingSource);
+}
+for(const t of TARGETS){
+ const button=document.createElement('button');button.id=t.id;button.textContent=t.label;
+ button.className='jump-button';button.disabled=true;button.onclick=()=>focusTarget(t.id);
+ $('jumps').append(button);
+}
+$('top').onclick=()=>{const y=surface(0,0);controls.target.set(0,y,0);camera.position.set(0,y+1100,.01);controls.update();};
+$('isometric').onclick=()=>{const y=surface(0,0);controls.target.set(0,y,0);camera.position.set(-320,y+480,440);controls.update();};
+const canvas=renderer.domElement;let start=null;
+canvas.addEventListener('pointerdown',e=>start={x:e.clientX,y:e.clientY});
+canvas.addEventListener('pointerup',e=>{
+ if(!start||Math.hypot(e.clientX-start.x,e.clientY-start.y)>9){start=null;return;}
+ start=null;
+ const box=canvas.getBoundingClientRect();
+ pointer.set((e.clientX-box.left)/box.width*2-1,-(e.clientY-box.top)/box.height*2+1);
+ ray.setFromCamera(pointer,camera);
+ const hit=ray.intersectObjects(clickable,false)[0];
+ if(hit)showBuilding(hit.object.userData.feature,hit.object.userData.source);
+});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);}
-animate();
-load();
+animate();load();
