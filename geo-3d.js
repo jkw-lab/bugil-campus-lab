@@ -1,28 +1,20 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { loadGeographicElevation } from './geo-dem.js';
+import { mergeGeodataBuildings, OFFICIAL_ADDITIONS, OSM_PRESERVE } from './geo-building-merge.js';
 
 /**
- * STRICT GEOGRAPHIC MODE
- *
- * Buildings: observed/public polygon rings only, queried live from the Korea
- * Building Footprints v2 FeatureServer (MOIS-derived online visualization).
- * Fallback: already-sourced OSM polygon rings, never phototraced guesses.
- * Roads: original OSM LineString centerlines only; no inferred road width.
- * Vertical geometry: DEM terrain only. No unknown building heights extruded.
- * Floor counts are shown as metadata, NEVER multiplied into a fake height.
- * Public data source is not copied for persistent/offline use.
+ * GIS MERGE (v0.4.9)
+ * Original OSM polygons are the base. Only three real official classroom
+ * polygons are layered in. Gym/dorm OSM footprints are never overridden.
+ * All roads come from OSM coordinates; terrain from Copernicus DEM.
+ * Building heights and road widths without measurements are not fabricated.
  */
 const ORIGIN={lon:127.1585,lat:36.8315};
 const MX=111320*Math.cos(ORIGIN.lat*Math.PI/180),MZ=111133;
 const SOURCE_GOV='https://portal.esrikr.com/arcgis/rest/services/MOIS_KR_Buildings_v2/FeatureServer/0/query';
-const SOURCE_ITEM='https://www.arcgis.com/home/item.html?id=b2c7a37bac8d4e40a85435b3f3d96d05';
 const BOUNDS={xmin:127.1562,ymin:36.8288,xmax:127.1630,ymax:36.8346};
-const TARGETS=[
- {id:'9248057',label:'북일고등학교 · 5층 건물',note:'공개 건물명에 본관 표기는 없음'},
- {id:'9248086',label:'북일여고 제1교',note:'공개 명칭: 제1교'},
- {id:'9248104',label:'북일여고 제2교',note:'공개 명칭: 제2교'}
-];
+const TARGETS=[...OFFICIAL_ADDITIONS,...OSM_PRESERVE];
 const $=id=>document.getElementById(id);
 const host=$('scene'),mobile=matchMedia('(max-width:760px)').matches;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#bcd2d9');
@@ -46,14 +38,16 @@ const terrain=new THREE.Mesh(new THREE.PlaneGeometry(1800,1800,1,1),terrainMater
 terrain.rotation.x=-Math.PI/2;terrain.visible=false;scene.add(terrain);
 const featuresGroup=new THREE.Group(),roadsGroup=new THREE.Group(),landGroup=new THREE.Group();
 scene.add(landGroup,roadsGroup,featuresGroup);
-const buildingFill=new THREE.MeshBasicMaterial({color:0x92d9e2,transparent:true,opacity:.45,side:THREE.DoubleSide,depthWrite:false});
+const buildingFill=new THREE.MeshBasicMaterial({color:0x83bfcb,transparent:true,opacity:.62,side:THREE.DoubleSide,depthWrite:false});
+const officialFill=new THREE.MeshBasicMaterial({color:0xe1c183,transparent:true,opacity:.74,side:THREE.DoubleSide,depthWrite:false});
 const buildingEdge=new THREE.LineBasicMaterial({color:0x165f7a,linewidth:1});
+const officialEdge=new THREE.LineBasicMaterial({color:0x8d5b18,linewidth:1});
 const footLine=new THREE.LineBasicMaterial({color:0xe9e2c3,linewidth:1});
 const roadLine=new THREE.LineBasicMaterial({color:0x57626a,linewidth:1});
 const parkFill=new THREE.MeshBasicMaterial({color:0x467b66,transparent:true,opacity:.25,side:THREE.DoubleSide,depthWrite:false});
 let dem=null;
-let activeData=null,buildingSource=null;
-const clickable=[],idToSurface=new Map(),targetEntries=new Map();
+const clickable=[],idToSurface=new Map();
+const buildingLabels=new THREE.Group();scene.add(buildingLabels);
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
 const world=p=>[(p[0]-ORIGIN.lon)*MX,(ORIGIN.lat-p[1])*MZ];
 const surface=(x,z)=>dem?dem.elevation(x,z):0;
@@ -111,21 +105,42 @@ function officialLabel(f){
  const name=[p.building_name||p.name,p.buld_nm_dc].filter(Boolean).join(' · ').trim();
  return name||'건물명 미등록';
 }
-function addBuilding(f,source){
+function addBuilding(record){
+ const {feature:f,source,id}=record;
+ const isOfficial=source!=='OpenStreetMap';
+ const material=isOfficial?officialFill:buildingFill,edge=isOfficial?officialEdge:buildingEdge;
  let count=0;
  for(const rings of polygonParts(f)){
   const geo=drapeShape(rings);if(!geo)continue;
-  const mesh=new THREE.Mesh(geo,buildingFill);
-  mesh.userData={feature:f,source};mesh.renderOrder=3;
+  const mesh=new THREE.Mesh(geo,material);
+  mesh.userData={record};mesh.renderOrder=3;
   featuresGroup.add(mesh);clickable.push(mesh);count++;
   for(const ring of rings){
-   const line=boundaryLine(ring,buildingEdge);
+   const line=boundaryLine(ring,edge);
    if(line){line.renderOrder=4;featuresGroup.add(line);}
   }
  }
- const id=featureId(f);
- if(id)idToSurface.set(id,f);
+ if(count&&id)idToSurface.set(id,record);
  return count;
+}
+function labelBuilding(record){
+ const f=record.feature;
+ const ring=polygonParts(f)?.[0]?.[0];
+ if(!Array.isArray(ring)||ring.length<4)return;
+ const pts=ring.map(world),xs=pts.map(p=>p[0]),zs=pts.map(p=>p[1]);
+ const x=(Math.min(...xs)+Math.max(...xs))/2,z=(Math.min(...zs)+Math.max(...zs))/2;
+ // 9m is only a readable floating label offset, NOT a claim about building height.
+ const canvas=document.createElement('canvas');canvas.width=640;canvas.height=88;
+ const context=canvas.getContext('2d');
+ context.fillStyle='#14232de8';context.beginPath();context.roundRect(4,4,632,80,13);context.fill();
+ context.strokeStyle=record.source==='OpenStreetMap'?'#7bc7d7':'#f0bd77';
+ context.lineWidth=3;context.stroke();
+ context.font='bold 27px system-ui';context.textAlign='center';context.textBaseline='middle';
+ context.fillStyle='#f4f7f7';context.fillText(record.label||officialLabel(f),320,44);
+ const texture=new THREE.CanvasTexture(canvas);
+ const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,depthTest:false,transparent:true}));
+ sprite.scale.set(86,11.9,1);sprite.position.set(x,surface(x,z)+9,z);
+ buildingLabels.add(sprite);
 }
 function addRoad(f){
  const g=f.geometry||{};
@@ -163,6 +178,8 @@ function addLand(f){
 }
 function clearGroup(g){for(const o of [...g.children]){
  g.remove(o);o.geometry?.dispose();
+ if(o.material?.map && o.material.map.isTexture)o.material.map.dispose();
+ if(o.material?.isSpriteMaterial)o.material.dispose();
 }}
 function setTerrain(){
  if(!dem)return;
@@ -202,48 +219,51 @@ async function loadGov(){
   if(json.type!=='FeatureCollection'||!Array.isArray(json.features)||json.features.length<15
     ||json.features.length>=2000||json.exceededTransferLimit)throw Error('건물 데이터 누락/불완전');
   if(!json.features.every(f=>polygonParts(f).length>0))throw Error('비폴리곤 건물 데이터');
-  buildingSource='정부 건물 도형 (온라인)';
   return json.features;
  }finally{clearTimeout(timer);}
 }
-function buildingFromOSM(osm){
- buildingSource='OpenStreetMap (정부 서비스 미접속)';
- return osm.features.filter(f=>f.properties?.featureType==='building'
-   &&polygonParts(f).length>0);
-}
 function focusTarget(id){
- const f=idToSurface.get(id);
- if(!f){$('detail').textContent='해당 공식 건물 ID는 현재 지도 자료에서 확인되지 않았어.';return;}
+ const r=idToSurface.get(id),f=r?.feature;
+ if(!f){$('detail').textContent='해당 건물은 현재 지도 소스에서 확인되지 않았어.';return;}
  const pts=polygonParts(f)[0][0].map(world);
  const xs=pts.map(p=>p[0]),zs=pts.map(p=>p[1]);
  const x=(Math.min(...xs)+Math.max(...xs))/2,z=(Math.min(...zs)+Math.max(...zs))/2;
  const y=surface(x,z);
- controls.target.set(x,y,z);camera.position.set(x-110,y+150,z+190);controls.update();
- showBuilding(f,buildingSource);
+ controls.target.set(x,y,z);camera.position.set(x-105,y+125,z+148);controls.update();
+ showBuilding(r);
 }
-function showBuilding(f,source){
- const p=f.properties||{},lines=[
-   officialLabel(f),
-   '출처: '+source,
-   '건물 ID: '+featureId(f),
-   '지상 층수: '+(p.gro_flo_co??'기록 없음'),
-   '건물 높이(m): 측정값 미확보 · 임의 높이 표시 없음',
-   '평면 윤곽: 제공기관 실제 폴리곤',
+function showBuilding(r){
+ const f=r.feature,p=f.properties||{};
+ const floors=p.gro_flo_co??p['building:levels'];
+ const lines=[
+  r.label||officialLabel(f),
+  '원본: '+r.source,
+  '건물 식별자: '+r.id,
+  '지상 층수: '+(floors??'자료 미등록'),
+  '실제 높이(m): 미확보 · 임의 추정값 사용하지 않음',
+  '건물 윤곽: 실제 공개 지리정보 좌표',
+  r.id.startsWith('way/')?'시설명 연결은 기존 프로젝트에서의 잠정 분류임':'건물 공식 명칭·용도는 원본 속성을 우선함'
  ];
  $('detail').textContent=lines.join('\n');
  $('detail').style.whiteSpace='pre-line';
 }
-function renderBuildings(features,source){
- clearGroup(featuresGroup);clickable.length=0;idToSurface.clear();
+function renderBuildings(selection){
+ clearGroup(featuresGroup);clearGroup(buildingLabels);
+ clickable.length=0;idToSurface.clear();
  let drawn=0;
- for(const f of features)drawn+=addBuilding(f,source);
- $('status').textContent='지리정보 건물 외곽선 '+drawn+'개 · 도로 중심선 '+roadsGroup.children.length+'개';
- $('source').textContent='건물: '+buildingSource+' · 도로: OSM 실제 선형 좌표';
- $('height-note').textContent='건물 높이 정보 없음 → 지형 위 실제 평면 윤곽만 표시 (가상 벽·지붕 생성하지 않음)';
+ for(const record of selection.records)drawn+=addBuilding(record);
+ for(const record of selection.records)if(record.label&&idToSurface.has(record.id))labelBuilding(record);
+ $('status').textContent='OSM 원본 '+selection.osmRetained+'개 + 공식 교사동 '+selection.officialAdded+'개 · 도로 '+roadsGroup.children.length+'개';
+ $('source').textContent='건물: 기존 OSM 윤곽 우선 + 공식 교사동 3개 선택 · 도로: OSM 원본 중심선';
+ $('height-note').textContent='건물의 실측 높이 부재: 위치·윤곽만 3D 지형에 투영하며, 임의 층고로 벽·지붕을 만들지 않음';
+ const missing=selection.officialMissing;
+ $('gov-note').textContent=missing.length?
+  '공식 교사동 미확보 ID: '+missing.join(', ')+' (OSM 건물은 계속 표시됨)':
+  '공식 교사동 3개 연결됨 · OSM 중복 '+selection.removed.length+'개 제거 · 기존 기숙사·체육관 폴리곤 유지';
  for(const t of TARGETS){
   const el=$(t.id);if(!el)continue;
   el.disabled=!idToSurface.has(t.id);
-  el.title=idToSurface.has(t.id)?t.note:'출처에서 건물 ID를 확인하지 못함';
+  el.title=idToSurface.has(t.id)?t.note||'실제 좌표 원본의 형태 표시':'원본 자료에서 해당 건물 ID 미확인';
  }
 }
 async function load(){
@@ -277,20 +297,19 @@ async function load(){
     addLand(f);
  }
  $('road-note').textContent='도로 '+roadCount+'개: OSM 중심선 그대로 (도로 폭·교량 높이 자료 미확보)';
- let buildings;
+ let official=[];
  try{
-  buildings=await loadGov();
-  $('gov-note').textContent='정부 건물 경계 온라인 서비스 연결됨 · 원본 자료 별도 저장 안 함';
+  official=await loadGov();
  }catch(err){
-  console.warn('Official building service unavailable, showing OSM-only outlines:',err);
-  buildings=buildingFromOSM(osm);
-  $('gov-note').textContent='정부 건물 경계 조회 실패. OSM 실제 외곽선만 표시 — 본관 등 일부 건물 미표시';
+  console.warn('Public building boundary unavailable, showing OSM only:',err);
+  $('gov-note').textContent='공식 교사동 자료 접속 실패. 기존 OSM 윤곽은 유지됨.';
  }
- renderBuildings(buildings,buildingSource);
+ const selection=mergeGeodataBuildings(osm.features,official);
+ renderBuildings(selection);
 }
 for(const t of TARGETS){
  const button=document.createElement('button');button.id=t.id;button.textContent=t.label;
- button.className='jump-button';button.disabled=true;button.onclick=()=>focusTarget(t.id);
+ button.className='jump-button';button.disabled=true;button.title=t.note||'원본 공간정보 기준';button.onclick=()=>focusTarget(t.id);
  $('jumps').append(button);
 }
 $('top').onclick=()=>{const y=surface(0,0);controls.target.set(0,y,0);camera.position.set(0,y+1100,.01);controls.update();};
@@ -304,7 +323,7 @@ canvas.addEventListener('pointerup',e=>{
  pointer.set((e.clientX-box.left)/box.width*2-1,-(e.clientY-box.top)/box.height*2+1);
  ray.setFromCamera(pointer,camera);
  const hit=ray.intersectObjects(clickable,false)[0];
- if(hit)showBuilding(hit.object.userData.feature,hit.object.userData.source);
+ if(hit)showBuilding(hit.object.userData.record);
 });
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);}
