@@ -2,7 +2,8 @@ name: Validate GIS-only school geometry merge
 on:
   push:
     branches:
-      - feat/geo-merge-osm-preserved-v049
+      - main
+      - chore/lock-five-confirmed-footprints
     paths:
       - '.github/workflows/check-geo-merge.yml'
       - 'geo-building-merge.js'
