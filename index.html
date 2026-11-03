@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#0c1b22"/>
-<meta name="description" content="실제 공간정보로 그린 북일고 일대 3D 지형과 건물 경계. 건물 높이와 도로 폭을 임의로 생성하지 않습니다."/>
+<meta name="description" content="기존 OpenStreetMap 기숙사·체육관 윤곽에 공식 교사동 실제 외곽선을 선별 병합한 북일고 3D 지리정보 모델."/>
 <title>북일고 3D 캠퍼스 · 지리정보 기반</title>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <style>
@@ -30,23 +30,24 @@ a{color:#b6edeb}
 <body>
 <div id="scene"></div>
 <nav>
- <div class="brand"><strong>북일고 · 지리정보 3D</strong><span>실제 건물 경계 · 도로 중심선 · 관측 고도</span></div>
+ <div class="brand"><strong>북일고 · 지리정보 3D</strong><span>OSM 기존 윤곽 + 공식 교사동 · 실측 지형</span></div>
  <div class="actions"><button id="top">위에서</button><button id="isometric">입체로</button></div>
 </nav>
 <aside>
- <h2>검증 가능한 공간정보만 표시</h2>
+ <h2>실제 지리정보 통합 · v0.4.9</h2>
  <div role="status" id="status">공간정보 조회 중…</div>
- <p id="gov-note">정부 건물 경계 레이어 연결 확인 중…</p>
+ <p id="gov-note">기존 OSM 윤곽과 공식 교사동을 대조하는 중…</p>
  <p id="terrain-status">Copernicus 고도 자료를 불러오는 중…</p>
  <p id="road-note">OSM 도로 중심선 좌표를 확인하는 중…</p>
  <p id="source"></p>
- <div class="legend"><i class="swatch"></i> 건물 실제 평면 외곽선</div>
+ <div class="legend"><i class="swatch"></i> 기존 OSM 여송학사·현암관 포함 건물</div>
+ <div class="legend"><i class="swatch" style="background:#e1c183;border-color:#8d5b18"></i> 정부 자료에서 확인된 교사동 3개</div>
  <div class="legend"><i class="line"></i> 도로의 원본 중심선 (폭 미표시)</div>
  <p id="height-note"></p>
- <h2>공식 건물 ID로 이동</h2>
+ <h2>주요 건물 위치로 이동</h2>
  <div id="jumps"></div>
- <div id="detail">건물 외곽선을 터치하면 공식 건물명·건물 ID·층수를 표시해.</div>
- <p class="note">건물 지붕 높이·벽·도로 폭·옹벽은 실제 수치가 없으면 생성하지 않아. 지도 지형은 Copernicus GLO-90의 90m 고도 자료를 보간했으며 현장 측량 수준은 아니야.</p>
+ <div id="detail">건물을 터치하면 OSM/공식 자료의 출처·식별자와 높이 확인 수준을 볼 수 있어.</div>
+ <p class="note">기존 OSM 폴리곤은 유지하고, 공식 자료의 교사동 3개만 추가했어. 자료에 건물 높이·도로 폭이 없으므로 임의로 입체 크기를 만들지 않아. 90m DEM은 정밀한 지표고 측량이 아니야.</p>
 </aside>
 <footer>건물: <a href="https://www.arcgis.com/home/item.html?id=b2c7a37bac8d4e40a85435b3f3d96d05" target="_blank" rel="noopener noreferrer">행안부 원천 자료 기반 Esri 온라인 레이어</a> · 도로: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OSM contributors (ODbL)</a> · 지형: <a href="https://open-meteo.com/en/docs/elevation-api" target="_blank" rel="noopener noreferrer">Copernicus DEM / Open-Meteo</a></footer>
 <script type="module" src="./geo-3d.js"></script>
