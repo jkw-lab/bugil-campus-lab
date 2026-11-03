@@ -1,0 +1,44 @@
+{
+  "itemID": "b2c7a37bac8d4e40a85435b3f3d96d05",
+  "itemAPI": "https://www.arcgis.com/sharing/rest/content/items/b2c7a37bac8d4e40a85435b3f3d96d05",
+  "bboxWGS84": [
+    127.1562,
+    36.8288,
+    127.163,
+    36.8346
+  ],
+  "status": "ready",
+  "reason": "Public footprints downloaded; identities and actual heights are not determined from polygon geometry alone",
+  "itemTitle": "전국 건물 도형 v2 / Korea Building Footprints v2",
+  "itemType": "Feature Service",
+  "itemOwner": "Esri_KR_Content",
+  "itemAccess": "public",
+  "itemLicenseInfo": "<p style='background-attachment:initial; background-clip:initial; background-image:initial; background-origin:initial; background-position:initial; background-repeat:initial; background-size:initial; margin:12pt 0cm;'><span style='color:black; font-family:Helvetica, sans-serif; font-size:11.5pt;'>All rights reserved by&nbsp;</span><a target='_blank' href='https://business.juso.go.kr/addrlink/main.do?cPath=99JM' rel='nofollow ugc noopener noreferrer'><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>Korean Ministry of Interior and Safety</span></a></p><p style='background-attachment:initial; background-clip:initial; background-image:initial; background-origin:initial; background-position:initial; background-repeat:initial; background-size:initial; margin:12pt 0cm;'><span style='color:red; font-size:11.5pt;'>중요</span><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>:&nbsp;</span><span style='font-size:11.5pt;'>이</span><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>&nbsp;</span><span style='font-size:11.5pt;'>레이어는</span><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>&nbsp;</span><span style='font-size:11.5pt;'>온라인</span><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>&nbsp;</span><span style='font-size:11.5pt;'>시각화와</span><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>&nbsp;</span><span style='font-size:11.5pt;'>분석용입니다</span><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>.&nbsp;</span><span style='font-size:11.5pt;'>해외에서</span><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>&nbsp;</span><span style='font-size:11.5pt;'>오프라인</span><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>&nbsp;</span><span style='font-size:11.5pt;'>사용을</span><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>&nbsp;</span><span style='font-size:11.5pt;'>위해</span><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>&nbsp;</span><span style='font-size:11.5pt;'>내보내기</span><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>&nbsp;</span><span style='font-size:11.5pt;'>하는</span><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>&nbsp;</span><span style='font-size:11.5pt;'>것은</span><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>&nbsp;</span><span style='font-size:11.5pt;'>금지되어</span><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>&nbsp;</span><span style='font-size:11.5pt;'>있습니다</span><span style='font-family:Helvetica, sans-serif; font-size:11.5pt;'>.</span></p><p style='background-attachment:initial; background-clip:initial; background-image:initial; background-origin:initial; background-position:initial; background-repeat:initial; background-size:initial; margin:12pt 0cm;'><span style='color:red; font-family:Helvetica, sans-serif; font-size:11.5pt;'>Important Note</span><span style='font-family:Helvetica, sans-seri",
+  "serviceUrl": "https://portal.esrikr.com/arcgis/rest/services/MOIS_KR_Buildings_v2/FeatureServer",
+  "candidateLayerUrls": [
+    "https://portal.esrikr.com/arcgis/rest/services/MOIS_KR_Buildings_v2/FeatureServer/0"
+  ],
+  "selectedLayerUrl": "https://portal.esrikr.com/arcgis/rest/services/MOIS_KR_Buildings_v2/FeatureServer/0",
+  "layerName": "MOIS_KR_Buildings",
+  "layerExtent": {
+    "ymin": 1458771.48900912,
+    "xmin": 746889.798301038,
+    "ymax": 2065475.82374016,
+    "xmax": 1387704.2233198201,
+    "spatialReference": {
+      "falseM": -100000,
+      "xyTolerance": 0.001,
+      "mUnits": 10000,
+      "zUnits": 10000,
+      "latestWkid": 5179,
+      "zTolerance": 0.001,
+      "wkid": 102080,
+      "xyUnits": 10000,
+      "mTolerance": 0.001,
+      "falseX": -4620900,
+      "falseY": -12203900,
+      "falseZ": -100000
+    }
+  },
+  "featureCount": 172
+}
