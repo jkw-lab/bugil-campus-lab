@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - chore/lock-five-confirmed-footprints
+      - chore/lock-seven-confirmed-footprints
     paths:
       - '.github/workflows/check-geo-merge.yml'
       - 'geo-building-merge.js'
