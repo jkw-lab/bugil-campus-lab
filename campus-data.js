@@ -1,6 +1,6 @@
 // BUGIL Campus Lab v0.3: approximate positions from user-marked satellite imagery.
 // Local orientation: +X = east, +Z = south. Units are illustrative, NOT survey meters.
-// v0.4 pixel-to-scene calibration based on user-annotated overhead view; photo perspective may vary.
+// v0.4.5 footprint revision: rectilinear dorm plan alignment to 2026 aerial references.
 // Landmark centers are visually estimated, not GPS coordinates or surveyed measurements.
 export const FACILITIES = [
  {id:"main",no:"01",name:"본관",type:"academic",confidence:"높음",x:-6,z:-142,focus:52,
@@ -16,22 +16,26 @@ export const FACILITIES = [
  {id:"dormOld",no:"06",name:"여송학사 본관",type:"dorm",confidence:"중간",x:5,z:-320,focus:57,
   parts:[{x:-7,z:3,w:44,d:20,h:20},{x:14,z:-14,w:28,d:20,h:16,rot:-0.25}],notes:"가장 북쪽 숲 안쪽의 기숙사 본관"},
  {id:"dormNew",no:"07",name:"여송학사 신관",type:"dorm",confidence:"높음",x:151,z:210,focus:80,
-  // Literal M outline in the overhead plan: two tall outer wings and two slanted interior links.
+  // Rectilinear stepped M silhouette, visually traced from the supplied top-down
+  // Apple Maps screenshot and cross-checked with the school aerial photograph.
+  // Parts use only axis-aligned rectangles; all plan corners are right angles.
   parts:[
-   {x:-38,z:6,w:19,d:72,h:27,detail:"westWing"},
-   {x:-19,z:-12,w:19,d:58,h:26,rot:0.72,detail:"leftDiagonal"},
-   {x:19,z:-12,w:19,d:58,h:27,rot:-0.72,detail:"rightDiagonal"},
-   {x:38,z:6,w:19,d:70,h:27,detail:"eastWing"},
-   {x:0,z:11,w:18,d:18,h:36,detail:"clockTower"}
+   {x:-35,z:36,w:18,d:62,h:27,detail:"westWing"},
+   {x:-16,z:20,w:55,d:18,h:26,detail:"lowerBar"},
+   {x:3,z:-7,w:19,d:75,h:28,detail:"middleWing"},
+   {x:28,z:-34,w:62,d:18,h:27,detail:"upperBar"},
+   {x:51,z:-20,w:18,d:34,h:26,detail:"eastWing"},
+   {x:4,z:-18,w:18,d:19,h:36,detail:"clockTower"}
   ],
-  notes:"M자형 평면 · 외곽의 두 동과 안쪽으로 꺾인 두 연결동, 중앙 시계탑"},
- {id:"girlsDorm",no:"여고",name:"여고 여송학사",type:"dorm",confidence:"중간",x:202,z:122,focus:58,
-  // Separate L/ㄱ footprint at the north-east side of the parking lot.
+  notes:"위성사진에 맞춘 직각 M자형 · 서측 날개·중앙동·동측 연결동·시계탑"},
+ {id:"girlsDorm",no:"여고",name:"여고 여송학사",type:"dorm",confidence:"높음",x:202,z:122,focus:58,
+  // Satellite screenshot: ㄱ at the top-right of the girls' sports ground:
+  // horizontal bar runs east from its WEST/southward leg (not the east leg).
   parts:[
-   {x:-15,z:-21,w:66,d:19,h:24,detail:"girlsHorizontal"},
-   {x:18,z:11,w:20,d:65,h:24,detail:"girlsVertical"}
+   {x:0,z:-16,w:70,d:18,h:24,detail:"girlsHorizontal"},
+   {x:-26,z:10,w:18,d:61,h:24,detail:"girlsVertical"}
   ],
-  notes:"여고 운동장 남쪽의 ㄱ자형 별도 건물 · 위성사진 윤곽 기준"}
+  notes:"위성사진 기준 ㄱ자형 · 북쪽 가로동의 서쪽 끝에서 남쪽으로 꺾이는 별도 기숙사"}
 ];
 export const LANDMARKS = [
  {id:"field",no:"08",name:"대운동장",x:-5,z:5,kind:"field",notes:"본관 남쪽의 큰 흙 운동장"},
