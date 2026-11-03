@@ -118,6 +118,8 @@ function makeBuilding(f) {
  return n;
 }
 function makeLand(f) {
+ const prop=f.properties||{};
+ if(!(prop.leisure==='pitch'||prop.leisure==='park'||prop.landuse==='forest'||prop.landuse==='grass'||prop.landuse==='recreation_ground'))return;
  for(const rings of polygons(f.geometry)) {
    const parsed=shapeFromRings(rings);
    if(!parsed||!nearWorld(...parsed.centroid))continue;
