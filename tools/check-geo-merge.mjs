@@ -33,7 +33,7 @@ const fingerprint=geometry=>{
    hash=Math.imul(hash^ch.charCodeAt(0),16777619);
  return (hash>>>0).toString(16).padStart(8,'0');
 };
-const confirmedIds=['way/487459954','way/487459955','way/494469121','way/494724468','9248057'];
+const confirmedIds=['way/487459954','way/487459955','way/494469121','way/494724468','9248057','way/487459956','9248086'];
 const officialById=new Map(official.map(f=>[String(f.properties?.objectid??f.properties?.OBJECTID??f.id),f]));
 const geometryFingerprints=Object.fromEntries(confirmedIds.map(id=>{
  const feature=id.startsWith('way/')?osm.features.find(f=>f.id===id):officialById.get(id);
