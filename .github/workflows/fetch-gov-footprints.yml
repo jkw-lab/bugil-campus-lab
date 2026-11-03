@@ -1,0 +1,41 @@
+name: Retrieve public official building polygons
+on:
+  push:
+    branches: [feat/strict-geodata-only]
+    paths: ['.github/workflows/fetch-gov-footprints.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Query public building FeatureServer item and document accessibility
+        run: python3 tools/fetch_gov_footprints.py
+      - name: Inspect data or recorded nonavailability
+        run: |
+          cat geo/gov-footprints-status.json
+          python3 - <<'PY'
+          import json, pathlib
+          d=json.load(open('geo/gov-footprints-status.json'))
+          print('Government buildings status:',d['status'])
+          if d['status']=='ready':
+              f=json.load(open('geo/gov-building-footprints.geojson'))
+              assert len(f['features']) >= 5
+              print('Imported public geometry:',len(f['features']))
+          PY
+      - name: Commit geometries or source diagnostics
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add geo/gov-footprints-status.json
+          if [ -f geo/gov-building-footprints.geojson ]; then
+            git add geo/gov-building-footprints.geojson
+          fi
+          if ! git diff --cached --quiet; then
+            git commit -m 'data: record official building footprint result [skip ci]'
+            git push
+          fi
