@@ -287,6 +287,14 @@ async function load() {
     const data=await res.json();
     if(data?.type!=='FeatureCollection'||!Array.isArray(data.features))throw new Error('GeoJSON 형식 오류');
     if(data.features.length<10)throw new Error('표시할 공개 지형 자료가 부족함');
+    try{
+      dem=await loadGeographicElevation();
+      applyRealTerrain();
+      $('terrain-status').textContent='지형: Copernicus 90m 고도 · 해발 '+dem.min.toFixed(0)+'~'+dem.max.toFixed(0)+'m · 기준 '+dem.baseline.toFixed(0)+'m';
+    }catch(terrainError){
+      console.error('Terrain data loading failed',terrainError);
+      $('terrain-status').textContent='고도 데이터 로드 실패: 평면 임시 표시 ('+String(terrainError.message||terrainError)+')';
+    }
     renderData(data);return;
   } catch(e){err=String(e.message||e);}
  }
@@ -295,6 +303,16 @@ async function load() {
  $('retry').hidden=false;
 }
 $('retry').onclick=load;
+function focusSchool(id){
+ const b=schoolBlocks.find(b=>b.id===id);
+ if(!b)return;
+ const [x,z]=toWorld(b.centerLonLat),y=terrainHeight(x,z);
+ controls.target.set(x,y+11,z);
+ camera.position.set(x-127,y+125,z+170);
+ controls.update();
+}
+$('boys-main').onclick=()=>focusSchool('main');
+$('girls-main').onclick=()=>focusSchool('girlsA');
 $('top').onclick=()=>{
   controls.target.set(0,0,0);
   camera.position.set(0,1150,.01);
