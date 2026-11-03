@@ -36,7 +36,7 @@ export function createProvisionalSchoolFootprints(osmData){
    entries.push(feature);count++;
   }
   summary.push({id:b.id,name:b.name,partCount:count,
-    confidence:'provisional',x:b.x,z:b.z});
+    confidence:'provisional',x:b.x,z:b.z,centerLonLat:fit.gameToWgs([b.x,b.z]),estimatedHeight:Math.max(...b.parts.map(p=>p.h))});
  }
  return {features:entries,buildings:summary,fitRmsGameUnits:fit.rms};
 }
