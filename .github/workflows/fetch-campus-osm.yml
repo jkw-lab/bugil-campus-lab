@@ -1,0 +1,39 @@
+name: Fetch public OSM campus geometry (one-time)
+on:
+  push:
+    branches: [feat/geo-footprint-verification]
+    paths:
+      - '.github/workflows/fetch-campus-osm.yml'
+permissions:
+  contents: write
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Collect public building footprints
+        run: |
+          python3 tools/fetch_osm.py --lat 36.8315 --lon 127.1585 --radius 680 --output geo/osm-2026-bugil-vicinity.geojson
+      - name: Check public source
+        run: |
+          python3 - <<'PY'
+          import json
+          p='geo/osm-2026-bugil-vicinity.geojson'
+          d=json.load(open(p,encoding='utf-8'))
+          n=len(d['features'])
+          print('OSM features: ',n)
+          assert n>10,'Overpass returned suspiciously small data'
+          print('Geometry source:',d.get('attribution'))
+          PY
+      - name: Commit unaligned geo features
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add geo/osm-2026-bugil-vicinity.geojson
+          if ! git diff --cached --quiet; then
+            git commit -m "data: import unaligned public OSM footprints [skip ci]"
+            git push
+          fi
