@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0c1b22">
-<title>북일고 · 공개 지리정보 기반 3D 실험</title>
+<title>북일고 · 지리정보 기반 3D 모델</title>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <style>
 :root{font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;background:#13252e;color:#f3f7f6}
@@ -33,12 +33,14 @@ footer{position:absolute;left:12px;bottom:max(10px,env(safe-area-inset-bottom));
 <aside>
   <h2>공개 공간정보로 생성한 건물</h2>
   <div id="status" role="status">OpenStreetMap 건물 정보를 불러오는 중…</div>
-  <p>가져온 건물의 <b>실제 지도상 평면 윤곽</b>을 입체화해. 건물 이름과 층수가 공개 데이터에 없으면 임의로 붙이지 않아.</p>
+  <p id="terrain-status">고도 자료를 읽는 중…</p>
+  <p id="manual-status">누락된 교사동 복원 데이터를 읽는 중…</p>
+  <p><b>회색</b>: OSM의 공개 건물 외곽선을 그대로 입체화. <b style="color:#f4d2a0">베이지색</b>: OSM에서 빠진 북일고 본관·북일여고 A·B동을 기존 사진 기반 모델에서 복원한 <b>잠정 윤곽</b>.</p>
   <button id="retry" hidden>지도 다시 불러오기</button>
   <div id="building">건물을 탭하면 공개 데이터 속성을 확인할 수 있어.</div>
-  <p class="warnings">학교 건물로 확정된 모델이 아니야. 주변 건물이 함께 표시될 수 있고, 건물 높이·지형·외관은 검증되지 않은 임시 표현이야.</p>
+  <p class="warnings">지도에는 인근 일반 건물이 함께 표시돼. 일반 OSM 건물은 실재 평면 외곽선이지만 높이는 대부분 임시값이야. 베이지색 교사동의 위치·형태 또한 추정치이며, 고도는 90m DEM이라 옹벽·계단·구내 도로 고저차는 정확히 표현할 수 없어.</p>
 </aside>
-<footer>실제 지도 좌표계 WGS84 · 북쪽 ↑ · 3D 건물 높이 임시값 포함 · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" style="color:#d5e6ea">© OpenStreetMap contributors (ODbL)</a> · 보안·출입·실내 정보 없음</footer>
+<footer>실제 지도 좌표계 WGS84 · 북쪽 ↑ · 90m DEM 지형 · 건물 높이 일부 임시 · <a href="https://open-meteo.com/en/docs/elevation-api" target="_blank" rel="noopener noreferrer" style="color:#d5e6ea">Copernicus DEM / Open-Meteo</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" style="color:#d5e6ea">© OpenStreetMap contributors (ODbL)</a> · 보안·출입·실내 정보 없음</footer>
 <script type="module" src="./geo-3d.js"></script>
 </body>
 </html>
