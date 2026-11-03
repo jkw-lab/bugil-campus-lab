@@ -1,47 +1,54 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0c1b22">
-<title>북일고 · 지리정보 기반 3D 모델</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#0c1b22"/>
+<meta name="description" content="실제 공간정보로 그린 북일고 일대 3D 지형과 건물 경계. 건물 높이와 도로 폭을 임의로 생성하지 않습니다."/>
+<title>북일고 · 지리정보 기반 3D</title>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <style>
-:root{font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;background:#13252e;color:#f3f7f6}
-*{box-sizing:border-box}body{margin:0;overflow:hidden}button,a{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible{outline:2px solid #f6c985;outline-offset:3px}
+:root{font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;background:#112630;color:#eff8f5}
+*{box-sizing:border-box}body{margin:0;overflow:hidden}button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:2px solid #fff0ae;outline-offset:3px}
 #scene{position:fixed;inset:0}#scene canvas{display:block;touch-action:none}
-nav{position:absolute;top:max(10px,env(safe-area-inset-top));left:12px;right:12px;display:flex;justify-content:space-between;gap:12px;pointer-events:none;align-items:flex-start}
-.brand,.actions{background:#0b1824e9;border:1px solid #60758069;border-radius:14px;padding:13px 15px;backdrop-filter:blur(15px);pointer-events:auto}
-.brand strong{font-size:17px;letter-spacing:-.03em}.brand span{display:block;color:#a5b9c4;font-size:10px;margin-top:4px}
-.actions{display:flex;gap:6px;align-items:center}.actions button,.actions a{border:1px solid #ffffff33;border-radius:8px;color:#f0f5f6;background:#ffffff08;padding:9px 11px;text-decoration:none;font-size:11px}
-.actions button:hover,.actions a:hover{background:#ffffff20}
-aside{position:absolute;top:105px;left:12px;width:280px;max-height:calc(100dvh - 180px);overflow:auto;border-radius:14px;padding:16px;background:#0b1824e9;border:1px solid #60758069;backdrop-filter:blur(15px)}
-aside h2{font-size:13px;margin:0 0 9px}aside p{font-size:11px;line-height:1.6;color:#b4cbd4;margin:6px 0 10px}
-#status{font-size:12px;color:#f7d19c;font-weight:700;line-height:1.5}.jump{display:flex;gap:6px;margin:10px 0}.jump button{flex:1;padding:9px 3px;border-radius:8px;border:1px solid #d3af7490;color:#ffe3b5;background:#d3af7420;font-size:10px}.jump button:hover{background:#d3af7440}#building{padding:10px 0;border-top:1px solid #3d4b52;font-size:11px;line-height:1.65;color:#dbe7e7}
-#building b{font-size:12px}.warnings{color:#f3cba2;font-size:10px;line-height:1.5}
-#retry{width:100%;border:1px solid #e8b86f;border-radius:8px;background:#e5ae60;color:#15232e;padding:9px;font-weight:700;font-size:11px;margin:9px 0}
-footer{position:absolute;left:12px;bottom:max(10px,env(safe-area-inset-bottom));max-width:560px;background:#0b1824e8;padding:9px 12px;border-radius:9px;font-size:10px;line-height:1.5;color:#bbccd2;pointer-events:none}
-@media(max-width:700px){.brand{padding:10px 12px}.brand strong{font-size:13px}.brand span{font-size:9px}.actions{padding:5px;gap:3px}.actions button,.actions a{padding:8px;font-size:9px}aside{top:86px;width:min(250px,58vw);padding:11px;max-height:calc(100dvh - 175px)}footer{max-width:calc(100% - 24px)}}
+nav{position:absolute;top:max(10px,env(safe-area-inset-top));left:12px;right:12px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;pointer-events:none}
+.brand,.actions,aside{background:#0b1926ed;border:1px solid #6b869060;border-radius:14px;backdrop-filter:blur(12px);pointer-events:auto}
+.brand{padding:12px 14px}.brand strong{font-size:16px;letter-spacing:-.02em}.brand span{display:block;color:#a6c4d0;font-size:10px;margin-top:5px}
+.actions{display:flex;gap:5px;padding:7px}.actions button{border:1px solid #ffffff38;border-radius:9px;color:#ebf3f6;background:#ffffff0a;padding:9px 10px;font-size:11px}.actions button:hover{background:#ffffff25}
+aside{position:absolute;top:91px;left:12px;width:min(310px,calc(100vw - 24px));max-height:calc(100dvh - 173px);overflow:auto;padding:14px 15px}
+aside h2{font-size:13px;margin:0 0 10px}aside p{font-size:11px;line-height:1.65;color:#bdd2d8;margin:8px 0}
+#status{font-size:12px;color:#ffe0a3;font-weight:700;line-height:1.55}
+#detail{padding:10px 0;border-top:1px solid #64778070;color:#eaf4f4;white-space:pre-line;font-size:11px;line-height:1.7}
+#jumps{display:grid;gap:6px;margin:10px 0}.jump-button{padding:9px 11px;text-align:left;color:#b5f3f4;background:#1a586040;border:1px solid #58a2a789;border-radius:9px;font-size:11px}.jump-button:disabled{opacity:.35;cursor:not-allowed}
+.legend{display:flex;gap:8px;align-items:center;margin:9px 0;color:#bbd7da;font-size:11px}.swatch{display:inline-block;width:12px;height:12px;border-radius:3px;background:#92d9e2;border:1px solid #165f7a}.line{height:2px;width:16px;background:#57626a}
+.note{border-top:1px solid #6477804f;padding-top:8px}
+footer{position:absolute;left:12px;right:12px;bottom:max(10px,env(safe-area-inset-bottom));width:max-content;max-width:calc(100% - 24px);border-radius:9px;background:#0b1926ea;color:#c4d9d9;font-size:10px;line-height:1.5;padding:9px 12px}
+a{color:#b6edeb}
+@media(max-width:700px){.brand{padding:10px 11px}.brand strong{font-size:13px}.brand span{font-size:9px}.actions{padding:4px}.actions button{padding:8px 6px;font-size:10px}aside{top:78px;max-height:calc(100dvh - 155px);width:min(270px,66vw);padding:10px}footer{font-size:9px}}
 </style>
 </head>
 <body>
 <div id="scene"></div>
 <nav>
-  <div class="brand"><strong>BUGIL · GEO 3D</strong><span>실제 공개지도 외곽선 기반 실험 모델</span></div>
-  <div class="actions"><button id="top">위에서 보기</button><button id="isometric">입체 보기</button><a href="./index.html">기존 게임</a></div>
+ <div class="brand"><strong>북일고 · 지리정보 3D</strong><span>실제 건물 경계 · 도로 중심선 · 관측 고도</span></div>
+ <div class="actions"><button id="top">위에서</button><button id="isometric">입체로</button></div>
 </nav>
 <aside>
-  <h2>공개 공간정보로 생성한 건물</h2>
-  <div id="status" role="status">OpenStreetMap 건물 정보를 불러오는 중…</div>
-  <p id="terrain-status">고도 자료를 읽는 중…</p>
-  <p id="manual-status">누락된 교사동 복원 데이터를 읽는 중…</p>
-  <div class="jump"><button id="boys-main">북일고 본관 보기</button><button id="girls-main">북일여고 본관 보기</button></div>
-  <p><b>회색</b>: OSM의 공개 건물 외곽선을 그대로 입체화. <b style="color:#f4d2a0">베이지색</b>: OSM에서 빠진 북일고 본관·북일여고 A·B동을 기존 사진 기반 모델에서 복원한 <b>잠정 윤곽</b>.</p>
-  <button id="retry" hidden>지도 다시 불러오기</button>
-  <div id="building">건물을 탭하면 공개 데이터 속성을 확인할 수 있어.</div>
-  <p class="warnings">지도에는 인근 일반 건물이 함께 표시돼. 일반 OSM 건물은 실재 평면 외곽선이지만 높이는 대부분 임시값이야. 베이지색 교사동의 위치·형태 또한 추정치이며, 고도는 90m DEM이라 옹벽·계단·구내 도로 고저차는 정확히 표현할 수 없어.</p>
+ <h2>검증 가능한 공간정보만 표시</h2>
+ <div role="status" id="status">공간정보 조회 중…</div>
+ <p id="gov-note">정부 건물 경계 레이어 연결 확인 중…</p>
+ <p id="terrain-status">Copernicus 고도 자료를 불러오는 중…</p>
+ <p id="road-note">OSM 도로 중심선 좌표를 확인하는 중…</p>
+ <p id="source"></p>
+ <div class="legend"><i class="swatch"></i> 건물 실제 평면 외곽선</div>
+ <div class="legend"><i class="line"></i> 도로의 원본 중심선 (폭 미표시)</div>
+ <p id="height-note"></p>
+ <h2>공식 건물 ID로 이동</h2>
+ <div id="jumps"></div>
+ <div id="detail">건물 외곽선을 터치하면 공식 건물명·건물 ID·층수를 표시해.</div>
+ <p class="note">건물 지붕 높이·벽·도로 폭·옹벽은 실제 수치가 없으면 생성하지 않아. 지도 지형은 Copernicus GLO-90의 90m 고도 자료를 보간했으며 현장 측량 수준은 아니야.</p>
 </aside>
-<footer>실제 지도 좌표계 WGS84 · 북쪽 ↑ · 90m DEM 지형 · 건물 높이 일부 임시 · <a href="https://open-meteo.com/en/docs/elevation-api" target="_blank" rel="noopener noreferrer" style="color:#d5e6ea">Copernicus DEM / Open-Meteo</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" style="color:#d5e6ea">© OpenStreetMap contributors (ODbL)</a> · 보안·출입·실내 정보 없음</footer>
+<footer>건물: <a href="https://www.arcgis.com/home/item.html?id=b2c7a37bac8d4e40a85435b3f3d96d05" target="_blank" rel="noopener noreferrer">행안부 원천 자료 기반 Esri 온라인 레이어</a> · 도로: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OSM contributors (ODbL)</a> · 지형: <a href="https://open-meteo.com/en/docs/elevation-api" target="_blank" rel="noopener noreferrer">Copernicus DEM / Open-Meteo</a></footer>
 <script type="module" src="./geo-3d.js"></script>
 </body>
 </html>
