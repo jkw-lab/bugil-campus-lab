@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101a22">
+<title>BUGIL CAMPUS · 지리정보 검증</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;color:#eaf1f3;background:#0c151c}
+*{box-sizing:border-box}body{margin:0}button,input,textarea{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #dca55a;outline-offset:2px}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #31404a;gap:12px}
+header strong{font-size:18px;letter-spacing:-.02em}header small{display:block;color:#a1b1b9;font-size:11px;margin-top:3px}
+header a{color:#f9c77d;font-size:12px;text-decoration:none}
+main{display:grid;grid-template-columns:minmax(0,1fr) 305px;gap:0;min-height:calc(100dvh - 68px)}
+.mapwrap{position:relative;min-height:510px;overflow:hidden;background:#15252d}
+#map{width:100%;height:100%;display:block;touch-action:none}
+.mapbar{position:absolute;top:16px;left:16px;display:flex;gap:6px;flex-wrap:wrap}
+.mapbar button,.secondary{border:1px solid #657680;background:#172731e8;color:#eff5f7;padding:8px 12px;border-radius:8px;font-size:12px}
+.mapbar button:hover,.secondary:hover{border-color:#f7c47d}
+.legend{position:absolute;bottom:16px;left:16px;background:#111e27e8;padding:10px 13px;border:1px solid #43505b;border-radius:8px;font-size:11px;line-height:1.8;max-width:270px}
+.sw{display:inline-block;width:12px;height:8px;margin-right:7px;vertical-align:middle}
+.side{padding:18px 18px 24px;border-left:1px solid #31404a;background:#101b24;overflow-y:auto;max-height:calc(100dvh - 68px)}
+h2{font-size:14px;margin:0 0 8px}h3{font-size:12px;margin:20px 0 7px;color:#f4c37e}
+p{color:#b4c2cb;font-size:12px;line-height:1.6;margin:6px 0 10px}.stat{font-size:12px;color:#f4c37e;font-weight:700}
+.card{border:1px solid #3a4b58;border-radius:10px;padding:12px;margin-bottom:11px;background:#172630}
+label{font-size:11px;display:block;margin:9px 0 5px;color:#d5e3e8}
+input[type=file]{width:100%;font-size:11px;color:#bcd1da}
+textarea{width:100%;min-height:112px;padding:9px;border:1px solid #405564;border-radius:8px;background:#0c151c;color:#e8f0f4;font-family:ui-monospace,monospace;font-size:11px;resize:vertical}
+button.primary{width:100%;border:0;background:#e4ad61;color:#192029;font-weight:700;padding:10px;border-radius:8px;font-size:12px}
+small.note{color:#90a3ae;font-size:10px;line-height:1.5;display:block;margin-top:8px}
+#result,#checklist{font-size:12px;line-height:1.6}
+#result{color:#afc0c8;white-space:pre-line}
+#checklist{padding:0;list-style:none;margin:8px 0}
+#checklist li{padding:8px 7px;border-bottom:1px solid #2e3b45;display:flex;justify-content:space-between;gap:7px}
+#checklist button{background:transparent;border:none;color:#edf4f7;font-size:12px;text-align:left}
+#checklist button:hover{color:#f1bf7d}
+#checklist em{font-style:normal;color:#f5c37c;white-space:nowrap;font-size:10px}
+#selected{color:#d8e5ea;font-size:11px}
+#selected strong{color:white}
+@media(max-width:850px){main{grid-template-columns:1fr}.mapwrap{height:56dvh;min-height:360px}.side{border-left:0;border-top:1px solid #31404a;max-height:unset}header{padding:12px}header strong{font-size:15px}.legend{bottom:8px;left:8px;padding:8px;font-size:10px}.mapbar{top:8px;left:8px}}
+</style>
+</head>
+<body>
+<header><div><strong>BUGIL CAMPUS <span style="color:#f1bf7d">/ GEO VERIFY</span></strong><small>기존 게임과 분리된 건물·도로 데이터 검증 화면 · v0.1</small></div><a href="./index.html">기존 3D 게임으로 돌아가기</a></header>
+<main>
+<section class="mapwrap">
+<canvas id="map" aria-label="북일고 추정 건물 윤곽과 도로 검증 지도"></canvas>
+<div class="mapbar"><button id="all">전체 보기</button><button id="dorm">기숙사 확대</button><button id="reset">위치 초기화</button></div>
+<div class="legend"><div><span class="sw" style="background:#e6a74b"></span>현재 3D 추정 건물 윤곽 (미검증)</div><div><span class="sw" style="background:#46c9cb"></span>가져온 지리정보 (좌표 정렬 후)</div><div><span class="sw" style="background:#788c9b"></span>현재 도로 중심선</div><div>드래그 이동 · 휠/두 손가락 확대</div></div>
+</section>
+<aside class="side">
+<div class="card"><h2>현재 데이터 상태</h2><p>게임 코드의 건물 매스를 위에서 내려다본 모습이야. 노란색은 <b>실측값이 아님</b>. 지리정보 파일을 가져오면 비교용 윤곽을 청록색으로 겹쳐 그려.</p><div class="stat" id="summary">건물 8동 · 정렬 미검증</div></div>
+<h3>1 · 지리정보 가져오기</h3>
+<div class="card">
+<label for="geojson">OSM·브이월드에서 만든 GeoJSON</label>
+<input id="geojson" type="file" accept=".geojson,.json,application/geo+json,application/json">
+<p>외부 지도 데이터를 자동으로 확정하지 않아. 가져온 폴리곤과 도로는 미리보기만 가능해.</p><div id="result" role="status">파일을 선택하지 않았어.</div>
+</div>
+<h3>2 · 좌표 정렬</h3>
+<div class="card">
+<p>게임 좌표와 실제 지도 좌표는 아직 연결되지 않았어. 동일한 기준점 2개 이상을 아래 형식으로 입력하면 회전·축척·이동을 추정해 정렬해.</p>
+<label for="anchors">한 줄당 gameX, gameZ, longitude, latitude</label>
+<textarea id="anchors" spellcheck="false" placeholder="-6,-142,127.000000,36.000000&#10;1,124,127.001000,35.999000"></textarea>
+<button class="primary" id="align">기준점으로 정렬</button>
+<small class="note">예시 숫자는 실제 북일고 좌표가 아니야. 최소 두 기준점의 실제 좌표를 확인해 입력해야 해. 3점 이상이면 정렬 오차(RMS)도 비교할 수 있어.</small>
+</div>
+<h3>3 · 주요 건물별 확인</h3>
+<div class="card"><ul id="checklist"></ul><div id="selected">건물을 선택하면 현재 추정 상태를 볼 수 있어.</div></div>
+<div class="card">
+<button class="secondary" id="export" style="width:100%">현재 추정 윤곽 GeoJSON 내보내기</button>
+<small class="note">내보내는 좌표계는 게임 전용 로컬 X/Z야. 실제 위경도 GeoJSON으로 사용하면 안 돼. 자료 출처: 기존 사용자 제공 위성사진에 기반한 추정 모델.</small>
+</div>
+<p>정보 출처: 기존 프로젝트 추정 모델 및 사용자가 별도로 가져온 공개 데이터. OSM 데이터 이용 시 © OpenStreetMap contributors (ODbL) 저작자 표시를 유지해야 해.</p>
+</aside>
+</main>
+<script type="module" src="./verification.js"></script>
+</body>
+</html>
