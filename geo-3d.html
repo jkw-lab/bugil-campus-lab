@@ -17,7 +17,7 @@ nav{position:absolute;top:max(10px,env(safe-area-inset-top));left:12px;right:12p
 .actions button:hover,.actions a:hover{background:#ffffff20}
 aside{position:absolute;top:105px;left:12px;width:280px;max-height:calc(100dvh - 180px);overflow:auto;border-radius:14px;padding:16px;background:#0b1824e9;border:1px solid #60758069;backdrop-filter:blur(15px)}
 aside h2{font-size:13px;margin:0 0 9px}aside p{font-size:11px;line-height:1.6;color:#b4cbd4;margin:6px 0 10px}
-#status{font-size:12px;color:#f7d19c;font-weight:700;line-height:1.5}#building{padding:10px 0;border-top:1px solid #3d4b52;font-size:11px;line-height:1.65;color:#dbe7e7}
+#status{font-size:12px;color:#f7d19c;font-weight:700;line-height:1.5}.jump{display:flex;gap:6px;margin:10px 0}.jump button{flex:1;padding:9px 3px;border-radius:8px;border:1px solid #d3af7490;color:#ffe3b5;background:#d3af7420;font-size:10px}.jump button:hover{background:#d3af7440}#building{padding:10px 0;border-top:1px solid #3d4b52;font-size:11px;line-height:1.65;color:#dbe7e7}
 #building b{font-size:12px}.warnings{color:#f3cba2;font-size:10px;line-height:1.5}
 #retry{width:100%;border:1px solid #e8b86f;border-radius:8px;background:#e5ae60;color:#15232e;padding:9px;font-weight:700;font-size:11px;margin:9px 0}
 footer{position:absolute;left:12px;bottom:max(10px,env(safe-area-inset-bottom));max-width:560px;background:#0b1824e8;padding:9px 12px;border-radius:9px;font-size:10px;line-height:1.5;color:#bbccd2;pointer-events:none}
@@ -35,6 +35,7 @@ footer{position:absolute;left:12px;bottom:max(10px,env(safe-area-inset-bottom));
   <div id="status" role="status">OpenStreetMap 건물 정보를 불러오는 중…</div>
   <p id="terrain-status">고도 자료를 읽는 중…</p>
   <p id="manual-status">누락된 교사동 복원 데이터를 읽는 중…</p>
+  <div class="jump"><button id="boys-main">북일고 본관 보기</button><button id="girls-main">북일여고 본관 보기</button></div>
   <p><b>회색</b>: OSM의 공개 건물 외곽선을 그대로 입체화. <b style="color:#f4d2a0">베이지색</b>: OSM에서 빠진 북일고 본관·북일여고 A·B동을 기존 사진 기반 모델에서 복원한 <b>잠정 윤곽</b>.</p>
   <button id="retry" hidden>지도 다시 불러오기</button>
   <div id="building">건물을 탭하면 공개 데이터 속성을 확인할 수 있어.</div>
