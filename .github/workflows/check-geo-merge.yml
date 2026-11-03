@@ -8,7 +8,7 @@ on:
       - 'geo-building-merge.js'
       - 'tools/check-geo-merge.mjs'
 permissions:
-  contents: read
+  contents: write
 jobs:
   source-preservation:
     runs-on: ubuntu-latest
@@ -20,3 +20,13 @@ jobs:
           node-version: '22'
       - name: Validate OSM and official records without storing GIS source geometry
         run: node tools/check-geo-merge.mjs
+      - name: Store only validation counts and source IDs
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add geo/merge-test-status.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'test: validate live geodata source selection [skip ci]'
+            git push
+          fi
