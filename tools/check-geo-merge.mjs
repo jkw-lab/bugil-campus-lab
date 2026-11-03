@@ -2,7 +2,7 @@
 // Source-preserving regression check; reads live GIS only for online analysis.
 // Neither coordinates nor third-party feature data is saved, printed or committed.
 import {readFileSync,writeFileSync} from 'node:fs';
-import {mergeGeodataBuildings,OFFICIAL_ADDITIONS,OSM_PRESERVE} from '../geo-building-merge.js';
+import {mergeGeodataBuildings,OFFICIAL_ADDITIONS,OSM_PRESERVE,CONFIRMED_FOOTPRINTS,geometryFingerprint,confirmedGeometryStatus} from '../geo-building-merge.js';
 const osm=JSON.parse(readFileSync('geo/osm-2026-bugil-vicinity.geojson','utf8'));
 function assert(test,message){if(!test)throw Error(message);}
 const base=mergeGeodataBuildings(osm.features,[]);
@@ -43,6 +43,31 @@ const geometryFingerprints=Object.fromEntries(confirmedIds.map(id=>{
 const merged=mergeGeodataBuildings(osm.features,official);
 assert(merged.officialAdded===3,'Three new classrooms were not obtained');
 assert(merged.officialMissing.length===0,'Official IDs missing');
+assert(merged.lockedSourceChanges.length===0,'A confirmed footprint changed in the source');
+assert(CONFIRMED_FOOTPRINTS.length===5,'Expected five user-confirmed footprints');
+for(const entry of CONFIRMED_FOOTPRINTS){
+ const record=merged.records.find(r=>r.id===entry.id);
+ assert(record,'User-confirmed footprint missing from rendered set: '+entry.id);
+ assert(record.source===entry.source || (entry.id==='9248057'&&record.source.includes('행안부')),'Source changed for '+entry.id);
+ assert(geometryFingerprint(record.feature.geometry)===entry.geometryHash,'Geometry fingerprint drift for '+entry.id);
+ assert(confirmedGeometryStatus(entry.id,record.feature.geometry)==='confirmed','Confirmed status not preserved: '+entry.id);
+}
+// Regression: simulate a changed OSM outline and ensure it cannot replace a locked building.
+const mutated=JSON.parse(JSON.stringify(osm.features));
+const edited=mutated.find(f=>f.id==='way/494724468');
+assert(!!edited,'Adan Hall source polygon missing');
+edited.geometry.coordinates[0][0][0]+=0.00001;
+const untrusted=mergeGeodataBuildings(mutated,official);
+assert(untrusted.lockedSourceChanges.some(x=>x.id==='way/494724468'),'Changed footprint was not detected');
+assert(!untrusted.records.some(x=>x.id==='way/494724468'),'Changed footprint was silently displayed');
+// Official source changes must also be rejected without fabricating another model.
+const mutatedGov=JSON.parse(JSON.stringify(official));
+const school=mutatedGov.find(f=>String(f.properties?.objectid??f.properties?.OBJECTID)==='9248057');
+assert(!!school,'Verified school main-building polygon missing');
+school.geometry.coordinates[0][0][0]+=0.00001;
+const changedGov=mergeGeodataBuildings(osm.features,mutatedGov);
+assert(changedGov.lockedSourceChanges.some(x=>x.id==='9248057'),'Modified official outline not detected');
+assert(!changedGov.records.some(x=>x.id==='9248057'),'Modified official outline displayed');
 for(const id of OFFICIAL_ADDITIONS.map(x=>x.id))assert(merged.records.some(x=>x.id===id),'Missing added '+id);
 for(const d of OSM_PRESERVE){
  assert(merged.preserved.find(x=>x.id===d.id)?.available,'Protected OSM map missing '+d.id);
@@ -56,7 +81,7 @@ assert(merged.removed.every(r=>!OSM_PRESERVE.some(s=>s.id===r.osmId)),'Preserved
 const result={
  status:'pass',osmOriginal:merged.osmOriginal,osmRetained:merged.osmRetained,
  officialAdded:merged.officialAdded,osmOverlappingReplaced:merged.removed.length,
- preservedOsmFootprints:merged.preserved.length,roads:(osm.features||[]).filter(f=>f.properties?.featureType==='road').length,
+ preservedOsmFootprints:merged.preserved.length,confirmedFootprints:merged.confirmed.filter(x=>x.available).length,roads:(osm.features||[]).filter(f=>f.properties?.featureType==='road').length,
  selectedOfficialIds:OFFICIAL_ADDITIONS.map(x=>x.id),
  preservedOsmIds:OSM_PRESERVE.map(x=>x.id),
  // Only counts and public feature IDs are stored, never licensed polygons.
