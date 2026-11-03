@@ -26,6 +26,20 @@ try{
  assert(data.type==='FeatureCollection'&&Array.isArray(data.features),'Incorrect official response format');
  official=data.features;
 }finally{clearTimeout(timer);}
+
+const fingerprint=geometry=>{
+ let hash=2166136261;
+ for(const ch of JSON.stringify(geometry||null))
+   hash=Math.imul(hash^ch.charCodeAt(0),16777619);
+ return (hash>>>0).toString(16).padStart(8,'0');
+};
+const confirmedIds=['way/487459954','way/487459955','way/494469121','way/494724468','9248057'];
+const officialById=new Map(official.map(f=>[String(f.properties?.objectid??f.properties?.OBJECTID??f.id),f]));
+const geometryFingerprints=Object.fromEntries(confirmedIds.map(id=>{
+ const feature=id.startsWith('way/')?osm.features.find(f=>f.id===id):officialById.get(id);
+ assert(!!feature,'Confirmed footprint not found in source: '+id);
+ return [id,fingerprint(feature.geometry)];
+}));
 const merged=mergeGeodataBuildings(osm.features,official);
 assert(merged.officialAdded===3,'Three new classrooms were not obtained');
 assert(merged.officialMissing.length===0,'Official IDs missing');
@@ -46,7 +60,7 @@ const result={
  selectedOfficialIds:OFFICIAL_ADDITIONS.map(x=>x.id),
  preservedOsmIds:OSM_PRESERVE.map(x=>x.id),
  // Only counts and public feature IDs are stored, never licensed polygons.
- sourceGeometryStored:false
+ sourceGeometryStored:false,geometryFingerprints
 };
 writeFileSync('geo/merge-test-status.json',JSON.stringify(result,null,2)+'\n','utf8');
 console.log(JSON.stringify(result,null,2));
