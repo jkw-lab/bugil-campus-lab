@@ -564,6 +564,11 @@ function select(b,move){
  }
 }
 select(FACILITIES[0],false);
+document.getElementById('girls-focus')?.addEventListener('click',()=>{
+ const target=CAMERA_PRESETS.girls;
+ flyTo(target.position,target.target);
+ showNotice('북일여고 A·B 교사동 · 위치/윤곽 잠정');
+});
 for(const button of document.querySelectorAll('#views button')){
  button.addEventListener('click',()=>{
   document.querySelectorAll('#views button').forEach(e=>e.classList.toggle('active',e===button));
