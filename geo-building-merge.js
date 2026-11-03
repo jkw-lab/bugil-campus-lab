@@ -9,8 +9,8 @@ export const OFFICIAL_ADDITIONS=[
  {id:"9248104",label:"북일여고 제2교",note:"정부 건물 도형 제2교"}
 ];
 export const OSM_PRESERVE=[
- {id:"way/487459954",label:"여송학사 신관 (OSM 명칭 연결 잠정)"},
- {id:"way/487459955",label:"여고 여송학사 (OSM 명칭 연결 잠정)"},
+ {id:"way/487459954",label:"여송학사 신관 (위치·윤곽 확인)"},
+ {id:"way/487459955",label:"여고 여송학사 (위치·윤곽 확인)"},
  {id:"way/487459956",label:"여송학사 본관 (위치·윤곽 확인)"},
  {id:"way/494469121",label:"현암관 (위치·윤곽 확인)"},
  {id:"way/494724468",label:"아단관 (위치·윤곽 확인)"}
