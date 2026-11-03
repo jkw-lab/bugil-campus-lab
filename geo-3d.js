@@ -61,6 +61,7 @@ const drawnMeshes=[];
 let currentData=null;
 let dem=null;
 let manualCount=0;
+let schoolBlocks=[];
 const provisionalLabels=new THREE.Group();scene.add(provisionalLabels);
 const mapMarkers=[];
 const terrainHeight=(x,z)=>dem?dem.elevation(x,z):0;
@@ -219,6 +220,34 @@ function createMarker(label,lon,lat,color) {
 }
 createMarker('북일고 지도 대표점',127.15817,36.83224,0xf8b863);
 createMarker('북일여고 지도 대표점',127.16009,36.83162,0x64c6cf);
+function placeSchoolLabel(b){
+ const [x,z]=toWorld(b.centerLonLat);
+ const canvas=document.createElement('canvas');canvas.width=560;canvas.height=112;
+ const c=canvas.getContext('2d');
+ c.fillStyle='#172631e6';c.beginPath();c.roundRect(7,7,546,98,18);c.fill();
+ c.strokeStyle='#f0bf80';c.lineWidth=3;c.stroke();
+ c.font='bold 31px system-ui';c.textAlign='center';c.textBaseline='middle';
+ c.fillStyle='#ffdfaf';c.fillText(b.name+' · 추정',280,56);
+ const texture=new THREE.CanvasTexture(canvas);
+ const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false}));
+ sprite.position.set(x,terrainHeight(x,z)+b.estimatedHeight+16,z);
+ sprite.scale.set(81,16.2,1);provisionalLabels.add(sprite);
+}
+function addMissingSchoolBlocks(data){
+ manualCount=0;schoolBlocks=[];
+ clearGroup(provisionalLabels);
+ try{
+  const modeled=createProvisionalSchoolFootprints(data);
+  for(const f of modeled.features)manualCount+=makeBuilding(f);
+  schoolBlocks=modeled.buildings;
+  schoolBlocks.forEach(placeSchoolLabel);
+  $('manual-status').textContent='추가 교사동 '+schoolBlocks.map(b=>b.name).join(' · ')+' (외곽·높이 잠정)';
+ }catch(e){
+  console.warn('Manual school infill unavailable',e);
+  $('manual-status').textContent='일부 교사동은 지리정보 변환 실패로 추가하지 못함';
+ }
+}
+
 function renderData(data) {
  currentData=data;
  clearGroup(buildings);clearGroup(land);clearGroup(roads);
@@ -236,10 +265,11 @@ function renderData(data) {
    polygonsDrawn+=makeBuilding(f);
    if(polygonsDrawn>1200)break;
  }
+ addMissingSchoolBlocks(data);
  const provisional=drawnMeshes.filter(x=>!x.userData.height.known).length;
  const displayed=drawnMeshes.length;
- $('status').textContent='공개 건물 외곽선 '+displayed+'개 입체화 · 도로 '+roads.children.length+'개 · 높이 추정 '+provisional+'개';
- $('building').textContent='모든 건물은 실내 구조가 없는 단순 입체 모델이야. 건물을 선택해 속성 확인.';
+ $('status').textContent='공개 OSM 건물 윤곽 '+(displayed-manualCount)+'개 + 교사동 '+schoolBlocks.length+'동 · 도로 '+roads.children.length+'개 · 높이 추정 '+provisional+'개';
+ $('building').textContent='회색: 실제 OSM 외곽선 / 베이지색: 잠정 교사동 모델. 건물을 선택해 출처를 확인할 수 있어.';
  $('retry').hidden=true;
  if(!displayed) {
    $('status').textContent='수집된 건물 외곽선이 없어서 표시할 수 없어.';
@@ -290,11 +320,11 @@ renderer.domElement.addEventListener('pointerup',e=>{
  const p=d.properties;
  const lines=[
   (p.name||'이름 미등록 건물'),
-  '출처: OpenStreetMap',
+  '출처: '+(p.localModel?'기존 사진 기반 모형의 임시 정렬':'OpenStreetMap 공개 건물 윤곽'),
   '건물 식별값: '+d.id,
   '높이: '+d.height.height.toFixed(1)+'m ('+d.height.label+')',
   '건물 분류: '+(p.building||'미분류'),
-  '위치: 실제 지도 좌표의 외곽선을 입체화 (명칭·시설 소속 검증 전)'
+  p.localModel?'위치·형태: 잠정 (사진 모델을 공개 운동장 기준점으로 정렬)':'위치: OSM 실제 지도 좌표의 외곽선 입체화'
  ];
  $('building').textContent=lines.join('\n');
  $('building').style.whiteSpace='pre-line';
