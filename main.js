@@ -1,3 +1,4 @@
+import { createCampusGeoOverlay } from './geo-campus-overlay.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { FACILITIES, LANDMARKS, CAMERA_PRESETS } from './campus-data.js';
@@ -556,6 +557,22 @@ document.getElementById('labels').addEventListener('click',e=>{
 document.getElementById('compare').addEventListener('click',()=>{
  flyTo([0,445,4],[0,0,0]);showNotice('전체 캠퍼스 위에서 보기');
 });
+let geoOverlay=null,geoLoading=false;
+document.getElementById('geo-overlay').addEventListener('click',async event=>{
+ const btn=event.currentTarget;
+ if(geoLoading)return;
+ if(!geoOverlay){
+   geoLoading=true;btn.disabled=true;
+   try{
+     geoOverlay=await createCampusGeoOverlay(scene,FACILITIES,elevation);
+   }catch(error){showNotice('공개 지도 윤곽을 불러오지 못했습니다');console.error('Geo overlay:',error);return;}
+   finally{geoLoading=false;btn.disabled=false;}
+ }
+ geoOverlay.group.visible=!geoOverlay.group.visible;
+ btn.classList.toggle('active',geoOverlay.group.visible);
+ btn.setAttribute('aria-pressed',String(geoOverlay.group.visible));
+ showNotice(geoOverlay.group.visible?'OSM 건물 '+geoOverlay.count+'동 윤곽 비교 · 오차 '+geoOverlay.rms.toFixed(1)+' 게임 단위':'공개 지도 윤곽 숨김');
+});
 function separateBuilding(b){
  if(b.collapsed)return showNotice('이미 분리된 건물입니다');
  b.collapsed=true;b.group.visible=false;b.label.visible=false;
@@ -580,7 +597,7 @@ function separateBuilding(b){
 function restore(){
  for(const o of debris){scene.remove(o.m);o.m.geometry=boxGeo}debris.length=0;
  FACILITIES.forEach(b=>{b.collapsed=false;b.group.visible=true;b.label.visible=labelsVisible});
- document.getElementById('status-title').textContent='주요 건물 8동 · 지형 v0.4';
+ document.getElementById('status-title').textContent='주요 건물 8동 · 배치 v0.4.5';
  showNotice('전체 캠퍼스 복구 완료');
 }
 document.getElementById('restore').addEventListener('click',restore);
