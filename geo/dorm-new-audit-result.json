@@ -1,0 +1,300 @@
+{
+  "source": "public MOIS-KR Buildings v2 live analysis; no polygon geometry exported",
+  "analysis": "comparing OSM 487459954 with all official building polygons intersecting this school area",
+  "osm": {
+    "id": "way/487459954",
+    "building": "school",
+    "name": null,
+    "officiallyNamed": false,
+    "verified": false,
+    "areaM2": 1451.06,
+    "bboxM": [
+      61.63,
+      216.63,
+      143.66,
+      281.58
+    ],
+    "vertices": 18
+  },
+  "govCountQueried": 52,
+  "overlappingOfficial": [
+    {
+      "id": "9248084",
+      "name": "북일여자고등학교",
+      "detail": null,
+      "floors": 1,
+      "areaM2": 1053.47,
+      "bboxM": [
+        93.15,
+        214.83,
+        143.27,
+        261.44
+      ],
+      "centerM": [
+        118.21,
+        238.13
+      ],
+      "vertexCount": 6,
+      "iouOsm": 0.49,
+      "overlapOsmPct": 57,
+      "overlapOfficialPct": 78.51,
+      "intersectionM2": 827.07
+    },
+    {
+      "id": "9248082",
+      "name": "북일여자고등학교",
+      "detail": null,
+      "floors": 1,
+      "areaM2": 712.4,
+      "bboxM": [
+        59.21,
+        244.9,
+        92.13,
+        280.88
+      ],
+      "centerM": [
+        75.67,
+        262.89
+      ],
+      "vertexCount": 6,
+      "iouOsm": 0.31,
+      "overlapOsmPct": 35.44,
+      "overlapOfficialPct": 72.18,
+      "intersectionM2": 514.19
+    }
+  ],
+  "nearOfficialNotOverlapping": [
+    {
+      "id": "9243165",
+      "name": null,
+      "detail": null,
+      "floors": 4,
+      "areaM2": 298.38,
+      "bboxM": [
+        134.35,
+        276.81,
+        157.47,
+        301.2
+      ],
+      "centerM": [
+        145.91,
+        289
+      ],
+      "vertexCount": 7,
+      "iouOsm": 0,
+      "overlapOsmPct": 0,
+      "overlapOfficialPct": 0,
+      "intersectionM2": 0
+    },
+    {
+      "id": "9243166",
+      "name": null,
+      "detail": "고물상",
+      "floors": 1,
+      "areaM2": 55.38,
+      "bboxM": [
+        214.07,
+        292.9,
+        225.2,
+        302.65
+      ],
+      "centerM": [
+        219.64,
+        297.78
+      ],
+      "vertexCount": 6,
+      "iouOsm": 0,
+      "overlapOsmPct": 0,
+      "overlapOfficialPct": 0,
+      "intersectionM2": 0
+    },
+    {
+      "id": "9243167",
+      "name": null,
+      "detail": "고물상",
+      "floors": 1,
+      "areaM2": 14.08,
+      "bboxM": [
+        196.83,
+        286.18,
+        202.23,
+        291.5
+      ],
+      "centerM": [
+        199.53,
+        288.84
+      ],
+      "vertexCount": 4,
+      "iouOsm": 0,
+      "overlapOsmPct": 0,
+      "overlapOfficialPct": 0,
+      "intersectionM2": 0
+    },
+    {
+      "id": "9243168",
+      "name": null,
+      "detail": null,
+      "floors": 1,
+      "areaM2": 267.61,
+      "bboxM": [
+        224.59,
+        247.48,
+        247.63,
+        270.2
+      ],
+      "centerM": [
+        236.11,
+        258.84
+      ],
+      "vertexCount": 13,
+      "iouOsm": 0,
+      "overlapOsmPct": 0,
+      "overlapOfficialPct": 0,
+      "intersectionM2": 0
+    },
+    {
+      "id": "9243169",
+      "name": null,
+      "detail": null,
+      "floors": 1,
+      "areaM2": 393.66,
+      "bboxM": [
+        224.67,
+        282.2,
+        255.68,
+        302.18
+      ],
+      "centerM": [
+        240.18,
+        292.19
+      ],
+      "vertexCount": 13,
+      "iouOsm": 0,
+      "overlapOsmPct": 0,
+      "overlapOfficialPct": 0,
+      "intersectionM2": 0
+    },
+    {
+      "id": "9243170",
+      "name": "문성하숙",
+      "detail": null,
+      "floors": 1,
+      "areaM2": 108.98,
+      "bboxM": [
+        207.32,
+        214.72,
+        223.41,
+        229.19
+      ],
+      "centerM": [
+        215.37,
+        221.95
+      ],
+      "vertexCount": 6,
+      "iouOsm": 0,
+      "overlapOsmPct": 0,
+      "overlapOfficialPct": 0,
+      "intersectionM2": 0
+    },
+    {
+      "id": "9243171",
+      "name": "문성하숙",
+      "detail": null,
+      "floors": 1,
+      "areaM2": 28.5,
+      "bboxM": [
+        218.78,
+        207.91,
+        226.4,
+        215.95
+      ],
+      "centerM": [
+        222.59,
+        211.93
+      ],
+      "vertexCount": 7,
+      "iouOsm": 0,
+      "overlapOsmPct": 0,
+      "overlapOfficialPct": 0,
+      "intersectionM2": 0
+    },
+    {
+      "id": "9247476",
+      "name": "신부7동노인정",
+      "detail": null,
+      "floors": 1,
+      "areaM2": 90.8,
+      "bboxM": [
+        196.61,
+        157.11,
+        210.87,
+        170.79
+      ],
+      "centerM": [
+        203.74,
+        163.95
+      ],
+      "vertexCount": 12,
+      "iouOsm": 0,
+      "overlapOsmPct": 0,
+      "overlapOfficialPct": 0,
+      "intersectionM2": 0
+    },
+    {
+      "id": "9247479",
+      "name": "메종다세대주택",
+      "detail": null,
+      "floors": 3,
+      "areaM2": 172.93,
+      "bboxM": [
+        201.36,
+        135.75,
+        212.49,
+        153.7
+      ],
+      "centerM": [
+        206.92,
+        144.72
+      ],
+      "vertexCount": 11,
+      "iouOsm": 0,
+      "overlapOsmPct": 0,
+      "overlapOfficialPct": 0,
+      "intersectionM2": 0
+    },
+    {
+      "id": "9248074",
+      "name": "북일고등학교",
+      "detail": null,
+      "floors": 2,
+      "areaM2": 41.85,
+      "bboxM": [
+        12.11,
+        305.17,
+        20.56,
+        313.92
+      ],
+      "centerM": [
+        16.33,
+        309.54
+      ],
+      "vertexCount": 6,
+      "iouOsm": 0,
+      "overlapOsmPct": 0,
+      "overlapOfficialPct": 0,
+      "intersectionM2": 0
+    }
+  ],
+  "unionOfOfficialOverlaps": {
+    "ids": [
+      "9248082",
+      "9248084"
+    ],
+    "intersectionM2": 1341.23,
+    "officialGroupAreaM2": 1765.87,
+    "coverageOsmPct": 92.43,
+    "coverageOfficialPct": 75.95,
+    "iou": 0.72
+  },
+  "savedSourceGeometry": false
+}
