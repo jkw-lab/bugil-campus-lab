@@ -1,0 +1,35 @@
+name: Fetch campus geographic elevation snapshot
+on:
+  push:
+    branches: [feat/geo3d-main-buildings-terrain]
+    paths:
+      - '.github/workflows/fetch-campus-dem.yml'
+permissions:
+  contents: write
+jobs:
+  fetch-public-dem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve Copernicus GLO-90 elevation grid
+        run: python3 tools/fetch_campus_dem.py
+      - name: Check elevation sample array
+        run: |
+          python3 - <<'PY'
+          import json
+          d=json.load(open("geo/campus-glo90-dem.json", encoding="utf-8"))
+          heights=d["heightsMetres"]
+          assert len(heights)==d["width"]*d["height"]==441
+          assert max(heights)-min(heights)>1
+          print("Elevation min/max:", min(heights), max(heights))
+          PY
+      - name: Commit public heightmap with attribution
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add geo/campus-glo90-dem.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'data: add georeferenced Copernicus GLO-90 terrain heights [skip ci]'
+            git push
+          fi

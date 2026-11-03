@@ -48,12 +48,22 @@ export function registerToGame(data) {
  const tx=tm[0]-A*sm[0]+B*sm[1],tz=tm[1]-B*sm[0]-A*sm[1];
  const metresToGame=(x,z)=>[A*x-B*z+tx,B*x+A*z+tz];
  const wgsToGame=([lon,lat])=>metresToGame(...wgsToMetres(lon,lat));
+ // Inverse transform for provisional buildings missing from the OSM extract.
+ // Inverted points have the same visual fit limitations as the original anchors.
+ const gameToMetres=(gx,gz)=>{
+  const qx=gx-tx,qz=gz-tz,det=A*A+B*B;
+  return [(A*qx+B*qz)/det,(-B*qx+A*qz)/det];
+ };
+ const gameToWgs=([gx,gz])=>{
+  const [east,south]=gameToMetres(gx,gz);
+  return [REFERENCE.lon+east/MX,REFERENCE.lat-south/MZ];
+ };
  const residuals=source.map((p,i)=>{
   const a=metresToGame(...p);
   return Math.hypot(a[0]-target[i][0],a[1]-target[i][1]);
  });
  const rms=Math.sqrt(residuals.reduce((s,x)=>s+x*x,0)/n);
- return {wgsToGame,metresToGame,rms,scale:Math.hypot(A,B),
+ return {wgsToGame,metresToGame,gameToWgs,gameToMetres,rms,scale:Math.hypot(A,B),
   degrees:Math.atan2(B,A)*180/Math.PI,
   residuals,controlPointCount:n,source:"© OpenStreetMap contributors (ODbL)",
   candidateBuildings:OSM_CANDIDATES};
