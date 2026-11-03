@@ -83,6 +83,8 @@ function applyRealTerrain(){
  geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
  geometry.computeVertexNormals();
  ground.geometry.dispose();ground.geometry=geometry;
+ // Geometry is already rotated into X/Z; undo the initial flat-plane object rotation.
+ ground.rotation.x=0;ground.position.y=0;
  ground.material.dispose();
  ground.material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
  grid.visible=false;
