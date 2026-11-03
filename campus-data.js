@@ -15,27 +15,26 @@ export const FACILITIES = [
   parts:[{x:0,z:0,w:27,d:22,h:13}],notes:"창의관 북쪽의 소형 시설"},
  {id:"dormOld",no:"06",name:"여송학사 본관",type:"dorm",confidence:"중간",x:5,z:-320,focus:57,
   parts:[{x:-7,z:3,w:44,d:20,h:20},{x:14,z:-14,w:28,d:20,h:16,rot:-0.25}],notes:"가장 북쪽 숲 안쪽의 기숙사 본관"},
- {id:"dormNew",no:"07",name:"여송학사 신관",type:"dorm",confidence:"높음",x:151,z:210,focus:80,
-  // Rectilinear stepped M silhouette, visually traced from the supplied top-down
-  // Apple Maps screenshot and cross-checked with the school aerial photograph.
-  // Parts use only axis-aligned rectangles; all plan corners are right angles.
+ {id:"dormNew",no:"07",name:"여송학사 신관",type:"dorm",confidence:"높음",x:163,z:220,focus:80,
+  // Right-angled stepped M footprint calibrated visually from the top-down satellite
+  // (roof around screenshot x870..1000, y790..896) and the official aerial image.
   parts:[
-   {x:-35,z:36,w:18,d:62,h:27,detail:"westWing"},
-   {x:-16,z:20,w:55,d:18,h:26,detail:"lowerBar"},
-   {x:3,z:-7,w:19,d:75,h:28,detail:"middleWing"},
-   {x:28,z:-34,w:62,d:18,h:27,detail:"upperBar"},
-   {x:51,z:-20,w:18,d:34,h:26,detail:"eastWing"},
-   {x:4,z:-18,w:18,d:19,h:36,detail:"clockTower"}
+   {x:-35,z:25,w:18,d:53,h:27,detail:"westWing"},
+   {x:-16,z:18,w:55,d:18,h:26,detail:"lowerBar"},
+   {x:3,z:2,w:19,d:55,h:28,detail:"middleWing"},
+   {x:28,z:-16,w:62,d:18,h:27,detail:"upperBar"},
+   {x:51,z:-13,w:18,d:26,h:26,detail:"eastWing"},
+   {x:4,z:-8,w:18,d:18,h:36,detail:"clockTower"}
   ],
-  notes:"위성사진에 맞춘 직각 M자형 · 서측 날개·중앙동·동측 연결동·시계탑"},
- {id:"girlsDorm",no:"여고",name:"여고 여송학사",type:"dorm",confidence:"높음",x:202,z:122,focus:58,
-  // Satellite screenshot: ㄱ at the top-right of the girls' sports ground:
-  // horizontal bar runs east from its WEST/southward leg (not the east leg).
+  notes:"위성사진과 항공사진을 대조한 직각 M자형 평면 · 서쪽 하단 날개와 중앙 연결동, 동쪽 상단 날개"},
+ {id:"girlsDorm",no:"여고",name:"여고 여송학사",type:"dorm",confidence:"높음",x:202,z:130,focus:58,
+  // Top-down satellite roof: east-west northern bar, WEST leg extending to the south.
+  // Reverse the erroneous east leg from the prior model.
   parts:[
-   {x:0,z:-16,w:70,d:18,h:24,detail:"girlsHorizontal"},
-   {x:-26,z:10,w:18,d:61,h:24,detail:"girlsVertical"}
+   {x:0,z:-18,w:70,d:18,h:24,detail:"girlsHorizontal"},
+   {x:-26,z:6,w:18,d:52,h:24,detail:"girlsVertical"}
   ],
-  notes:"위성사진 기준 ㄱ자형 · 북쪽 가로동의 서쪽 끝에서 남쪽으로 꺾이는 별도 기숙사"}
+  notes:"북쪽 가로동 서쪽 끝이 남쪽으로 꺾이는 ㄱ자형 · 여송학사 신관과 별도 건물"}
 ];
 export const LANDMARKS = [
  {id:"field",no:"08",name:"대운동장",x:-5,z:5,kind:"field",notes:"본관 남쪽의 큰 흙 운동장"},
@@ -47,5 +46,5 @@ export const CAMERA_PRESETS = {
  campus:{position:[-282,322,351],target:[-10,3,-22]},
  main:{position:[-126,92,-40],target:[-6,12,-142]},
  field:{position:[-35,195,198],target:[-5,0,5]},
- dorm:{position:[262,162,285],target:[151,10,210]}
+ dorm:{position:[274,162,295],target:[163,10,220]}
 };
