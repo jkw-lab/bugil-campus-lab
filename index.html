@@ -5,29 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101820">
 <meta name="description" content="BUGIL CAMPUS LAB: 공개 사진 자료로 재구성한 북일고 3D 캠퍼스 시제품.">
-<title>BUGIL CAMPUS LAB · v0.4.4 DEM Preview</title>
+<title>BUGIL CAMPUS LAB · v0.4.5</title>
 <link rel="stylesheet" href="./styles.css">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head>
 <body>
 <div id="world"></div>
 <div class="topbar">
-  <div class="brand"><div class="kicker">BUGIL · CAMPUS LAB</div><h1>북일고 3D 캠퍼스</h1><small>M · ㄱ DORMS / MERGED ROADS · v0.4.4</small></div>
+  <div class="brand"><div class="kicker">BUGIL · CAMPUS LAB</div><h1>북일고 3D 캠퍼스</h1><small>PHOTO-ALIGNED BUILDING LAYOUT · v0.4.5</small></div>
   <div class="topright" id="views"><button data-view="campus" class="active">전체</button><button data-view="main">본관</button><button data-view="field">운동장</button><button data-view="dorm">기숙사</button></div>
 </div>
 <div class="panel">
-  <div class="panelhead"><div class="mini">CAMPUS INDEX</div><h2>건물과 시설</h2><p>중첩 도로를 하나로 정리하고 신관 M자·여고 여송학사 ㄱ자 외곽을 적용했습니다. 지형은 추정 정렬입니다.</p></div>
-  <a href="./verification.html" style="display:block;margin:10px 14px;padding:9px 10px;border:1px solid #ff9c4270;border-radius:9px;background:#ff9c4215;color:#ffd4a3;text-align:center;text-decoration:none;font-size:11px;font-weight:700">건물·도로 지도 검증 열기 ↗</a>
+  <div class="panelhead"><div class="mini">CAMPUS INDEX</div><h2>건물과 시설</h2><p>새 위성사진 기준으로 신관의 직각 M자와 여고 기숙사의 ㄱ자 방향·상대 위치를 다시 맞췄습니다.</p></div>
+  <div style="padding:9px 14px;font-size:11px;line-height:1.7;border-bottom:1px solid #ffffff24"><a href="./geo-3d.html" style="color:#ffd29b;text-decoration:none;font-weight:700">공개지도 기반 3D 모델 보기 ↗</a><br><a href="./verification.html" style="color:#bfd6df;text-decoration:none">기존 건물·도로 검증 지도 ↗</a></div>
   <div class="facilitylist" id="facilities"></div>
   <div class="detail" id="detail">건물 이름을 누르면 해당 장소로 이동합니다.</div>
 </div>
-<div class="status"><div>모델링 진행 상태</div><b id="status-title">주요 건물 8동 · 지형 v0.4.4</b><div id="status-sub">등고선 기반 추정 고도 · 기준점 임시 정렬</div></div>
+<div class="status"><div>모델링 진행 상태</div><b id="status-title">주요 건물 8동 · 배치 v0.4.5</b><div id="status-sub">등고선 기반 추정 고도 · 기준점 임시 정렬</div></div>
 <div class="notice" id="notice"></div>
 <div class="footnote">고도 기준점 정렬은 잠정값 · 건물 및 운동장 높이는 현장 측량값 아님</div>
 <div class="bottombar">
   <button class="tool active" id="inspect" aria-pressed="true"><span>⌖</span><b>건물 탐색</b></button>
   <button class="tool" id="detail-view"><span>▤</span><b>고도 보기</b></button>
   <button class="tool" id="labels"><span>▤</span><b>이름 표시</b></button>
+  <button class="tool" id="geo-overlay" aria-pressed="false"><span>⌗</span><b>지도 윤곽</b></button>
   <button class="tool" id="compare"><span>◈</span><b>위에서 보기</b></button>
   <button class="tool" id="collapse"><span>▧</span><b>블록 분리</b></button>
   <button class="tool" id="restore"><span>↺</span><b>복구</b></button>
