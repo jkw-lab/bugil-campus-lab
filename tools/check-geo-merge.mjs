@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Source-preserving regression check; reads live GIS only for online analysis.
 // Neither coordinates nor third-party feature data is saved, printed or committed.
-import {readFileSync} from 'node:fs';
+import {readFileSync,writeFileSync} from 'node:fs';
 import {mergeGeodataBuildings,OFFICIAL_ADDITIONS,OSM_PRESERVE} from '../geo-building-merge.js';
 const osm=JSON.parse(readFileSync('geo/osm-2026-bugil-vicinity.geojson','utf8'));
 function assert(test,message){if(!test)throw Error(message);}
@@ -39,8 +39,14 @@ for(const d of OSM_PRESERVE){
 const allIds=merged.records.map(x=>x.id);
 assert(allIds.length===new Set(allIds).size,'Duplicate source IDs in merged buildings');
 assert(merged.removed.every(r=>!OSM_PRESERVE.some(s=>s.id===r.osmId)),'Preserved OSM polygon was removed');
-console.log(JSON.stringify({
+const result={
  status:'pass',osmOriginal:merged.osmOriginal,osmRetained:merged.osmRetained,
  officialAdded:merged.officialAdded,osmOverlappingReplaced:merged.removed.length,
- preservedOsmFootprints:merged.preserved.length,roads:(osm.features||[]).filter(f=>f.properties?.featureType==='road').length
-},null,2));
+ preservedOsmFootprints:merged.preserved.length,roads:(osm.features||[]).filter(f=>f.properties?.featureType==='road').length,
+ selectedOfficialIds:OFFICIAL_ADDITIONS.map(x=>x.id),
+ preservedOsmIds:OSM_PRESERVE.map(x=>x.id),
+ // Only counts and public feature IDs are stored, never licensed polygons.
+ sourceGeometryStored:false
+};
+writeFileSync('geo/merge-test-status.json',JSON.stringify(result,null,2)+'\n','utf8');
+console.log(JSON.stringify(result,null,2));
